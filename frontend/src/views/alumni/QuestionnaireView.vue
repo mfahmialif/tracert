@@ -141,7 +141,7 @@ function toggleCheckbox(questionId: number, option: string, checked: boolean) {
 
 function handleSuccessClose() {
   showSuccess.value = false;
-  router.push("/");
+  router.push("/home");
 }
 </script>
 

@@ -81,6 +81,18 @@ const router = createRouter({
       component: () => import('../views/admin/questionnaires/ResultsView.vue'),
       meta: { requiresAuth: true, role: 'admin' },
     },
+    {
+      path: '/admin/questionnaires/:id/respondents',
+      name: 'admin-questionnaire-respondents',
+      component: () => import('../views/admin/questionnaires/RespondentsView.vue'),
+      meta: { requiresAuth: true, role: 'admin' },
+    },
+    {
+      path: '/admin/questionnaires/:id/questions/:questionId/respondents',
+      name: 'admin-question-respondents',
+      component: () => import('../views/admin/questionnaires/QuestionRespondentsView.vue'),
+      meta: { requiresAuth: true, role: 'admin' },
+    },
 
     {
       path: '/admin/faculties',

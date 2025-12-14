@@ -109,9 +109,19 @@ const chartOptions = {
         >
           <ArrowLeft class="h-4 w-4" />
         </Button>
-        <div>
+        <div class="flex-1">
           <h1 class="text-2xl font-bold tracking-tight">Hasil Kuesioner</h1>
-          <p class="text-muted-foreground">{{ title }}</p>
+          <button
+            @click="
+              router.push(
+                `/admin/questionnaires/${route.params.id}/respondents`
+              )
+            "
+            class="text-muted-foreground hover:text-primary transition-colors cursor-pointer underline-offset-4 hover:underline"
+          >
+            {{ title }}
+            <span class="text-xs">(klik untuk lihat responden)</span>
+          </button>
         </div>
       </div>
 
@@ -136,11 +146,27 @@ const chartOptions = {
       <div v-else class="grid gap-6" id="results-content">
         <Card v-for="q in results" :key="q.id">
           <CardHeader>
-            <CardTitle class="text-lg font-medium">
-              {{ q.text }}
-              <span class="ml-2 text-sm font-normal text-muted-foreground"
-                >({{ q.count }} respon)</span
+            <CardTitle
+              class="text-lg font-medium flex items-start justify-between"
+            >
+              <span class="flex-1">
+                {{ q.text }}
+                <span class="ml-2 text-sm font-normal text-muted-foreground"
+                  >({{ q.count }} respon)</span
+                >
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="ml-4 text-primary hover:text-primary/80"
+                @click="
+                  router.push(
+                    `/admin/questionnaires/${route.params.id}/questions/${q.id}/respondents`
+                  )
+                "
               >
+                Lihat Selengkapnya →
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>

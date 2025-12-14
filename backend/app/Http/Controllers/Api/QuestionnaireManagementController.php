@@ -183,6 +183,79 @@ class QuestionnaireManagementController extends Controller
         return response()->json($data);
     }
 
+    public function respondents($id)
+    {
+        $questionnaire = Questionnaire::findOrFail($id);
+
+        // Get all responses with alumni data
+        $respondents = \App\Models\Response::where('questionnaire_id', $id)
+            ->with(['alumni.prodi', 'alumni.year'])
+            ->get()
+            ->map(function ($response) {
+                $alumni = $response->alumni;
+                return [
+                    'id' => $alumni->id,
+                    'nim' => $alumni->nim,
+                    'nama' => $alumni->nama,
+                    'prodi' => $alumni->prodi->nama ?? '-',
+                    'tahun_lulus' => $alumni->year->name ?? '-',
+                    'submitted_at' => $response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : $response->created_at->format('Y-m-d H:i:s'),
+                    'status' => $response->submitted_at ? 'complete' : 'draft',
+                ];
+            })
+            ->sortByDesc('submitted_at')
+            ->values();
+
+        return response()->json([
+            'questionnaire_title' => $questionnaire->title,
+            'total_responses' => $respondents->count(),
+            'respondents' => $respondents,
+        ]);
+    }
+
+    public function questionRespondents($questionnaireId, $questionId)
+    {
+        $questionnaire = Questionnaire::findOrFail($questionnaireId);
+        $question = Question::findOrFail($questionId);
+
+        // Get all answers for this question with alumni data
+        $answers = \App\Models\Answer::where('question_id', $questionId)
+            ->with(['response.alumni.prodi', 'response.alumni.year'])
+            ->get()
+            ->map(function ($answer) {
+                $alumni = $answer->response->alumni;
+                $answerValue = $answer->answer_value;
+
+                // Try to decode JSON for checkbox/multiple answers
+                $decoded = json_decode($answerValue, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $answerValue = implode(', ', $decoded);
+                } else {
+                    $answerValue = trim($answerValue, '"');
+                }
+
+                return [
+                    'id' => $alumni->alumni_id,
+                    'nim' => $alumni->nim,
+                    'nama' => $alumni->nama,
+                    'prodi' => $alumni->prodi->name ?? '-',
+                    'tahun_lulus' => $alumni->year->name ?? '-',
+                    'answer' => $answerValue,
+                    'submitted_at' => $answer->created_at->format('Y-m-d H:i:s'),
+                ];
+            })
+            ->sortByDesc('submitted_at')
+            ->values();
+
+        return response()->json([
+            'questionnaire_title' => $questionnaire->title,
+            'question_text' => $question->question_text,
+            'question_type' => $question->type,
+            'total_answers' => $answers->count(),
+            'answers' => $answers,
+        ]);
+    }
+
     public function exportExcel($id)
     {
         $questionnaire = Questionnaire::findOrFail($id);
