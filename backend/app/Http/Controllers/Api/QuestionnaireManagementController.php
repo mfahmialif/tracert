@@ -12,7 +12,7 @@ class QuestionnaireManagementController extends Controller
     public function index(Request $request)
     {
         $query = Questionnaire::with(['year', 'prodis', 'questions'])
-            ->withCount('responses');
+            ->withCount(['responses', 'questions']);
 
         if ($request->filled('tahun_id')) {
             $query->where('tahun_id', $request->tahun_id);
@@ -21,6 +21,16 @@ class QuestionnaireManagementController extends Controller
         if ($request->filled('is_active')) {
             $query->where('is_active', $request->is_active);
         }
+
+        // Search
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
 
         // Sorting
         $sortField = $request->input('sort_by', 'created_at');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/services/api";
 import AdminLayout from "@/layouts/AdminLayout.vue";
@@ -22,6 +22,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Plus,
   Trash2,
@@ -30,6 +31,9 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Search,
 } from "lucide-vue-next";
 import {
   DropdownMenu,
@@ -37,12 +41,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const router = useRouter();
 
 const questionnaires = ref<any[]>([]);
 const loading = ref(false);
 const deleteId = ref<number | null>(null);
+const search = ref("");
+let searchTimeout: ReturnType<typeof setTimeout>;
+
+// Watch search with debounce
+watch(search, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    params.value.page = 1;
+    fetchQuestionnaires();
+  }, 500);
+});
 
 // Pagination & Sorting State
 const pagination = ref({
@@ -75,6 +97,41 @@ const currentSortLabel = computed(() => {
   return match ? match.label : "Terbaru";
 });
 
+const visiblePages = computed(() => {
+  const { current_page, last_page } = pagination.value;
+  const delta = 1;
+  const range = [];
+  const rangeWithDots: (number | string)[] = [];
+  let l: number | undefined;
+
+  range.push(1);
+  for (let i = current_page - delta; i <= current_page + delta; i++) {
+    if (i < last_page && i > 1) {
+      range.push(i);
+    }
+  }
+  range.push(last_page);
+
+  for (let i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+  return [...new Set(rangeWithDots)];
+});
+
+function handleLimitChange(val: any) {
+  pagination.value.per_page = parseInt(val);
+  params.value.page = 1;
+  fetchQuestionnaires();
+}
+
 onMounted(() => {
   fetchQuestionnaires();
 });
@@ -83,7 +140,11 @@ async function fetchQuestionnaires() {
   loading.value = true;
   try {
     const response = await api.get("/admin/questionnaires", {
-      params: params.value,
+      params: {
+        ...params.value,
+        search: search.value,
+        per_page: pagination.value.per_page,
+      },
     });
     questionnaires.value = response.data.data;
     pagination.value = {
@@ -124,22 +185,39 @@ async function handleDelete() {
 
 <template>
   <AdminLayout>
-    <div class="flex items-center justify-between">
+    <div
+      class="flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between"
+    >
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Manajemen Kuesioner</h1>
         <p class="text-muted-foreground">
           Buat dan kelola kuesioner tracer study
         </p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-col gap-2 md:flex-row md:items-center">
+        <!-- Search -->
+        <div class="relative w-full md:w-[200px] lg:w-[300px]">
+          <Search
+            class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"
+          />
+          <Input
+            placeholder="Cari kuesioner..."
+            v-model="search"
+            class="pl-8 h-9"
+          />
+        </div>
+
+        <!-- Sort Dropdown -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="outline">
-              <ArrowUpDown class="mr-2 h-4 w-4" />
-              {{ currentSortLabel }}
+            <Button variant="outline" class="h-9 justify-between md:w-[160px]">
+              <span class="flex items-center">
+                <ArrowUpDown class="mr-2 h-4 w-4" />
+                <span class="truncate">{{ currentSortLabel }}</span>
+              </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" class="w-[200px]">
             <DropdownMenuItem
               v-for="opt in sortOptions"
               :key="opt.label"
@@ -158,8 +236,33 @@ async function handleDelete() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button @click="router.push('/admin/questionnaires/create')">
-          <Plus class="mr-2 h-4 w-4" /> Buat Baru
+        <!-- Limit Selector -->
+        <Select
+          :model-value="pagination.per_page.toString()"
+          @update:model-value="handleLimitChange"
+        >
+          <SelectTrigger class="h-9 w-[70px] w-100">
+            <SelectValue :placeholder="pagination.per_page.toString()" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="pageSize in [9, 10, 20, 30, 40, 50]"
+              :key="pageSize"
+              :value="pageSize.toString()"
+            >
+              {{ pageSize }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <!-- Create Button -->
+        <Button
+          class="h-9"
+          @click="router.push('/admin/questionnaires/create')"
+        >
+          <Plus class="mr-2 h-4 w-4" />
+          <span class="hidden md:inline">Buat Baru</span>
+          <span class="md:hidden">Baru</span>
         </Button>
       </div>
     </div>
@@ -231,9 +334,12 @@ async function handleDelete() {
           </div>
           <div class="flex justify-between py-1">
             <span>Wajib:</span>
-            <span class="font-medium">{{
-              q.is_mandatory ? "Ya" : "Tidak"
-            }}</span>
+            <Badge
+              :variant="q.is_mandatory ? 'destructive' : 'secondary'"
+              class="font-normal"
+            >
+              {{ q.is_mandatory ? "Wajib" : "Tidak Wajib" }}
+            </Badge>
           </div>
           <div class="flex justify-between py-1">
             <span>Pertanyaan:</span>
@@ -281,31 +387,66 @@ async function handleDelete() {
     </TransitionGroup>
 
     <!-- Pagination -->
-    <div
-      v-if="pagination.last_page > 1"
-      class="flex items-center justify-end space-x-2 py-4"
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        @click="handlePageChange(pagination.current_page - 1)"
-        :disabled="pagination.current_page === 1"
-      >
-        <ChevronLeft class="h-4 w-4" />
-        Previous
-      </Button>
-      <div class="text-sm font-medium">
-        Page {{ pagination.current_page }} of {{ pagination.last_page }}
+    <!-- Pagination -->
+    <div class="flex items-center justify-end space-x-2 py-4">
+      <div class="flex-1 text-sm text-muted-foreground">
+        {{ pagination.total }} data ditemukan.
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        @click="handlePageChange(pagination.current_page + 1)"
-        :disabled="pagination.current_page === pagination.last_page"
-      >
-        Next
-        <ChevronRight class="h-4 w-4" />
-      </Button>
+      <div class="flex items-center space-x-2">
+        <Button
+          variant="outline"
+          size="icon"
+          class="hidden h-8 w-8 p-0 lg:flex"
+          @click="handlePageChange(1)"
+          :disabled="pagination.current_page === 1"
+        >
+          <span class="sr-only">Go to first page</span>
+          <ChevronsLeft class="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          class="h-8 w-8 p-0"
+          @click="handlePageChange(pagination.current_page - 1)"
+          :disabled="pagination.current_page === 1"
+        >
+          <span class="sr-only">Go to previous page</span>
+          <ChevronLeft class="h-4 w-4" />
+        </Button>
+
+        <Button
+          v-for="(page, index) in visiblePages"
+          :key="index"
+          :variant="pagination.current_page === page ? 'default' : 'outline'"
+          size="sm"
+          class="h-8 w-8 p-0"
+          :disabled="page === '...'"
+          @click="page !== '...' && handlePageChange(Number(page))"
+        >
+          {{ page }}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="icon"
+          class="h-8 w-8 p-0"
+          @click="handlePageChange(pagination.current_page + 1)"
+          :disabled="pagination.current_page === pagination.last_page"
+        >
+          <span class="sr-only">Go to next page</span>
+          <ChevronRight class="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          class="hidden h-8 w-8 p-0 lg:flex"
+          @click="handlePageChange(pagination.last_page)"
+          :disabled="pagination.current_page === pagination.last_page"
+        >
+          <span class="sr-only">Go to last page</span>
+          <ChevronsRight class="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   </AdminLayout>
 </template>
