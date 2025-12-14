@@ -1,0 +1,18 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use App\Models\Role;
+
+class RoleSeeder extends Seeder
+{
+    public function run(): void
+    {
+        Role::insert([
+            ['role_id' => 1, 'role_name' => 'superadmin', 'created_at' => now(), 'updated_at' => now()],
+            ['role_id' => 2, 'role_name' => 'admin', 'created_at' => now(), 'updated_at' => now()],
+            ['role_id' => 3, 'role_name' => 'alumni', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+    }
+}

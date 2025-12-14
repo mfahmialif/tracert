@@ -1,0 +1,38 @@
+src/components/UserAvatar.vue(2,1): error TS6133: 'computed' is declared but its value is never read.
+src/components/UserAvatar.vue(3,1): error TS6133: 'useRouter' is declared but its value is never read.
+src/layouts/AdminLayout.vue(2,1): error TS6133: 'ref' is declared but its value is never read.
+src/views/admin/AlumniView.vue(3,26): error TS6133: 'computed' is declared but its value is never read.
+src/views/admin/AlumniView.vue(20,3): error TS6133: 'DropdownMenuContent' is declared but its value is never read.
+src/views/admin/AlumniView.vue(47,3): error TS6133: 'getPaginationRowModel' is declared but its value is never read.
+src/views/admin/AlumniView.vue(48,3): error TS6133: 'getSortedRowModel' is declared but its value is never read.
+src/views/admin/AlumniView.vue(49,3): error TS6133: 'getFilteredRowModel' is declared but its value is never read.
+src/views/admin/AlumniView.vue(57,7): error TS6133: 'router' is declared but its value is never read.
+src/views/admin/AlumniView.vue(58,7): error TS6133: 'route' is declared but its value is never read.
+src/views/admin/AlumniView.vue(59,7): error TS6133: 'authStore' is declared but its value is never read.
+src/views/admin/AlumniView.vue(84,14): error TS6133: 'column' is declared but its value is never read.
+src/views/admin/AlumniView.vue(97,14): error TS6133: 'column' is declared but its value is never read.
+src/views/admin/AlumniView.vue(114,14): error TS6133: 'column' is declared but its value is never read.
+src/views/admin/DashboardView.vue(3,10): error TS6133: 'ref' is declared but its value is never read.
+src/views/admin/DashboardView.vue(9,1): error TS6133: 'Button' is declared but its value is never read.
+src/views/admin/DashboardView.vue(32,7): error TS6133: 'router' is declared but its value is never read.
+src/views/admin/DashboardView.vue(33,7): error TS6133: 'route' is declared but its value is never read.
+src/views/admin/DashboardView.vue(34,7): error TS6133: 'authStore' is declared but its value is never read.
+src/views/admin/DashboardView.vue(61,21): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(61,48): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/views/admin/DashboardView.vue(65,23): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(65,50): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/views/admin/DashboardView.vue(73,21): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(73,48): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/views/admin/DashboardView.vue(77,23): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(77,50): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/views/admin/DashboardView.vue(101,26): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(115,26): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(129,26): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/DashboardView.vue(143,26): error TS2339: Property 'dashboard' does not exist on type 'Store<"dashboard", Pick<{ data: Ref<{ summary: { total_alumni: number; total_responses: number; active_questionnaires: number; response_rate: number; }; per_prodi: { prodi_id: number; nama: string; total_alumni: number; total_responses: number; percentage: number; }[]; per_tahun: { ...; }[]; questionnaires: { ...; }...'.
+src/views/admin/questionnaires/CreateView.vue(131,35): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/views/admin/questionnaires/CreateView.vue(139,35): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/views/admin/questionnaires/IndexView.vue(43,7): error TS6133: 'route' is declared but its value is never read.
+src/views/admin/questionnaires/IndexView.vue(44,7): error TS6133: 'authStore' is declared but its value is never read.
+src/views/alumni/DashboardView.vue(42,3): error TS6133: 'User' is declared but its value is never read.
+src/views/alumni/DashboardView.vue(246,24): error TS6133: 'index' is declared but its value is never read.
+src/views/alumni/QuestionnaireView.vue(216,24): error TS7006: Parameter 'checked' implicitly has an 'any' type.
