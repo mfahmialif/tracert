@@ -13,13 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/toast/use-toast";
+import { toast } from "vue-sonner";
 import api from "@/services/api";
 import { KeyRound } from "lucide-vue-next";
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { toast } = useToast();
 
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -38,10 +37,7 @@ async function handleChangePassword() {
       new_password_confirmation: newPasswordConfirmation.value,
     });
 
-    toast({
-      title: "Berhasil",
-      description: "Password berhasil diubah.",
-    });
+    toast.success("Password berhasil diubah");
 
     // Clear form
     currentPassword.value = "";
@@ -50,18 +46,9 @@ async function handleChangePassword() {
   } catch (error: any) {
     if (error.response?.status === 422) {
       errors.value = error.response.data.errors || {};
-      toast({
-        title: "Gagal",
-        description: "Periksa kembali input Anda.",
-        variant: "destructive",
-      });
+      toast.error("Periksa kembali input Anda");
     } else {
-      toast({
-        title: "Gagal",
-        description:
-          error.response?.data?.message || "Gagal mengubah password.",
-        variant: "destructive",
-      });
+      toast.error(error.response?.data?.message || "Gagal mengubah password");
     }
   } finally {
     loading.value = false;
