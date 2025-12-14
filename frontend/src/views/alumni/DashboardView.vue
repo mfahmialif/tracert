@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from "vue";
+import { onMounted, computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
 import { useQuestionnaireStore } from "../../stores/questionnaire";
@@ -42,13 +42,105 @@ import {
   User,
 } from "lucide-vue-next";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowUpDown } from "lucide-vue-next"; // Import ArrowUpDown
+
 const router = useRouter();
 const authStore = useAuthStore();
 const qStore = useQuestionnaireStore();
 const { isDark, toggleTheme } = useTheme();
 
+import { Input } from "@/components/ui/input";
+import { useDebounceFn } from "@vueuse/core"; // Try using vueuse if available or implement manual debounce
+
+// Manual debounce if vueuse not available (safest bet without checking package.json)
+function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+}
+
 onMounted(() => {
-  qStore.fetchQuestionnaires();
+  qStore.fetchCounts(); // Fetch counts independent of filters
+  qStore.fetchQuestionnaires(
+    1,
+    false,
+    sortBy.value,
+    sortOrder.value,
+    activeTab.value,
+    searchQuery.value
+  );
+});
+
+const sortBy = ref<"title" | "year" | "newest">("newest"); // Default to newest
+const sortOrder = ref<"asc" | "desc">("desc"); // Default desc for newest
+const activeTab = ref<"pending" | "completed">("pending");
+const searchQuery = ref("");
+
+function toggleSortOrder() {
+  sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
+}
+
+// Watch sortBy, activeTab, and debounce search to refetch
+const debouncedFetch = debounce(
+  (newSortBy, newSortOrder, newActiveTab, newSearch) => {
+    qStore.fetchQuestionnaires(
+      1,
+      false,
+      newSortBy,
+      newSortOrder,
+      newActiveTab,
+      newSearch
+    );
+  },
+  500
+);
+
+watch(
+  [sortBy, sortOrder, activeTab, searchQuery],
+  ([newSortBy, newSortOrder, newActiveTab, newSearch]) => {
+    // If search changed, always debounce
+    // For other changes, we might want immediate reaction, but keeping it simple with one debounced watcher is fine/smoother
+    debouncedFetch(newSortBy, newSortOrder, newActiveTab, newSearch);
+  }
+);
+
+// Use store data directly for display
+const sortedQuestionnaires = computed(() => qStore.questionnaires);
+
+const hasMore = computed(() => {
+  return qStore.meta.current_page < qStore.meta.last_page;
+});
+
+async function loadMore() {
+  if (!hasMore.value || qStore.loading) return;
+  await qStore.fetchQuestionnaires(
+    qStore.meta.current_page + 1,
+    true,
+    sortBy.value,
+    sortOrder.value,
+    activeTab.value,
+    searchQuery.value // Pass search query
+  );
+}
+
+// Initial fetch
+onMounted(() => {
+  qStore.fetchQuestionnaires(
+    1,
+    false,
+    sortBy.value,
+    sortOrder.value,
+    activeTab.value
+  );
 });
 
 async function handleLogout() {
@@ -56,12 +148,6 @@ async function handleLogout() {
   router.push("/login");
 }
 
-const completedCount = computed(
-  () => qStore.questionnaires.filter((q) => q.has_submitted).length
-);
-const pendingCount = computed(
-  () => qStore.questionnaires.filter((q) => !q.has_submitted).length
-);
 const userInitials = computed(
   () => authStore.user?.alumni?.nama?.charAt(0).toUpperCase() || "U"
 );
@@ -188,7 +274,7 @@ const firstName = computed(
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold">
-              {{ qStore.questionnaires.length }}
+              {{ qStore.counts.all }}
             </div>
           </CardContent>
         </Card>
@@ -201,7 +287,7 @@ const firstName = computed(
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-green-600">
-              {{ completedCount }}
+              {{ qStore.counts.completed }}
             </div>
           </CardContent>
         </Card>
@@ -214,7 +300,7 @@ const firstName = computed(
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold text-yellow-600">
-              {{ pendingCount }}
+              {{ qStore.counts.pending }}
             </div>
           </CardContent>
         </Card>
@@ -222,16 +308,85 @@ const firstName = computed(
 
       <!-- Questionnaires -->
       <div class="space-y-4">
-        <h2 class="text-xl font-semibold tracking-tight">Kuesioner Tersedia</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold tracking-tight">
+            Kuesioner Tersedia
+          </h2>
+          <div class="flex items-center gap-2">
+            <div class="relative w-full max-w-sm items-center">
+              <Input
+                type="text"
+                placeholder="Cari kuesioner..."
+                class="pl-10"
+                v-model="searchQuery"
+              />
+              <span
+                class="absolute start-0 inset-y-0 flex items-center justify-center px-3"
+              >
+                <span class="text-sm text-muted-foreground">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-search"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                </span>
+              </span>
+            </div>
+            <Select v-model="sortBy">
+              <SelectTrigger class="w-[180px]">
+                <SelectValue placeholder="Urutkan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Terbaru</SelectItem>
+                <SelectItem value="title">Nama</SelectItem>
+                <SelectItem value="year">Tahun</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon" @click="toggleSortOrder">
+              <ArrowUpDown class="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
-        <div v-if="qStore.loading" class="flex justify-center py-12">
+        <!-- Custom Tabs -->
+        <div class="flex space-x-2">
+          <Button
+            :variant="activeTab === 'pending' ? 'default' : 'outline'"
+            @click="activeTab = 'pending'"
+            class="rounded-full"
+          >
+            Belum Diisi
+          </Button>
+          <Button
+            :variant="activeTab === 'completed' ? 'default' : 'outline'"
+            @click="activeTab = 'completed'"
+            class="rounded-full"
+          >
+            Sudah Diisi
+          </Button>
+        </div>
+
+        <div
+          v-if="qStore.loading && qStore.questionnaires.length === 0"
+          class="flex justify-center py-12"
+        >
           <div
             class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
           ></div>
         </div>
 
         <div
-          v-else-if="qStore.questionnaires.length === 0"
+          v-else-if="sortedQuestionnaires.length === 0"
           class="flex flex-col items-center justify-center py-12 text-center"
         >
           <FileText class="h-12 w-12 text-muted-foreground mb-4 opacity-20" />
@@ -243,7 +398,7 @@ const firstName = computed(
 
         <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card
-            v-for="(q, index) in qStore.questionnaires"
+            v-for="q in sortedQuestionnaires"
             :key="q.id"
             class="flex flex-col transition-all hover:shadow-lg"
           >
@@ -272,7 +427,7 @@ const firstName = computed(
               >
                 <div class="flex items-center gap-1">
                   <FileText class="h-4 w-4" />
-                  <span>{{ q.type }}</span>
+                  <span>{{ q.year?.name }}</span>
                 </div>
                 <div class="flex items-center gap-1">
                   <div class="h-1 w-1 rounded-full bg-border"></div>
@@ -288,11 +443,32 @@ const firstName = computed(
               >
                 Isi Kuesioner
               </Button>
-              <Button v-else variant="outline" class="w-full" disabled>
-                Sudah Diisi
+              <Button
+                v-else
+                variant="secondary"
+                class="w-full"
+                @click="router.push(`/questionnaire/${q.id}`)"
+              >
+                Lihat Jawaban
               </Button>
             </CardFooter>
           </Card>
+        </div>
+
+        <!-- Load More Button -->
+        <div v-if="hasMore" class="flex justify-center pt-6 pb-8">
+          <Button
+            variant="outline"
+            @click="loadMore"
+            :disabled="qStore.loading"
+            class="min-w-[200px]"
+          >
+            <span
+              v-if="qStore.loading"
+              class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+            ></span>
+            {{ qStore.loading ? "Memuat..." : "Load More" }}
+          </Button>
         </div>
       </div>
     </main>

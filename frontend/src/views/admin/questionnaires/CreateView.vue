@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/services/api";
 import AdminLayout from "@/layouts/AdminLayout.vue";
@@ -28,19 +28,42 @@ const router = useRouter();
 const form = ref({
   title: "",
   description: "",
-  type: "tracer_study",
-  target_audience: "all",
+  tahun_id: "",
+  prodi_ids: [] as number[],
   start_date: "",
   end_date: "",
   is_active: true,
   is_mandatory: false,
 });
 const loading = ref(false);
+const years = ref<any[]>([]);
+const prodis = ref<any[]>([]);
+
+onMounted(() => {
+  fetchOptions();
+});
+
+async function fetchOptions() {
+  try {
+    const [yearRes, prodiRes] = await Promise.all([
+      api.get("/admin/years?per_page=100"),
+      api.get("/prodis?per_page=100"), // Assuming public or admin usage
+    ]);
+    years.value = yearRes.data.data;
+    prodis.value = prodiRes.data.data;
+  } catch (e) {
+    console.error("Failed to fetch options", e);
+  }
+}
 
 async function handleSubmit() {
   loading.value = true;
   try {
-    await api.post("/admin/questionnaires", form.value);
+    await api.post("/admin/questionnaires", {
+      ...form.value,
+      // Ensure prodi_ids are numbers
+      prodi_ids: form.value.prodi_ids.map(Number),
+    });
     router.push("/admin/questionnaires");
   } catch (e) {
     console.error(e);
@@ -85,30 +108,56 @@ async function handleSubmit() {
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-4">
             <div class="space-y-2">
-              <Label>Tipe Kuesioner</Label>
-              <Select v-model="form.type">
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label>Tahun Periode</Label>
+              <Select v-model="form.tahun_id">
+                <SelectTrigger
+                  ><SelectValue placeholder="Pilih Tahun"
+                /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tracer_study">Tracer Study</SelectItem>
-                  <SelectItem value="satisfaction_survey"
-                    >Survei Kepuasan</SelectItem
+                  <SelectItem
+                    v-for="y in years"
+                    :key="y.id"
+                    :value="y.id.toString()"
                   >
+                    {{ y.name }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div class="space-y-2">
-              <Label>Target Audiens</Label>
-              <Select v-model="form.target_audience">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Alumni</SelectItem>
-                  <SelectItem value="graduated_1_year"
-                    >Lulusan 1 Tahun</SelectItem
-                  >
-                </SelectContent>
-              </Select>
+              <Label>Target Program Studi</Label>
+              <div
+                class="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2"
+              >
+                <div
+                  v-for="prodi in prodis"
+                  :key="prodi.id"
+                  class="flex items-center space-x-2"
+                >
+                  <Checkbox
+                    :id="'prodi-' + prodi.id"
+                    :checked="form.prodi_ids.includes(prodi.id)"
+                    @update:checked="
+                      (checked) => {
+                        if (checked) form.prodi_ids.push(prodi.id);
+                        else
+                          form.prodi_ids = form.prodi_ids.filter(
+                            (id) => id !== prodi.id
+                          );
+                      }
+                    "
+                  />
+                  <Label :for="'prodi-' + prodi.id" class="cursor-pointer">
+                    {{ prodi.name }} ({{ prodi.code }})
+                  </Label>
+                </div>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                Pilih program studi yang dituju.
+              </p>
             </div>
           </div>
 

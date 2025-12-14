@@ -9,10 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Questionnaire extends Model
 {
     protected $fillable = [
-        'type_id',
+        'tahun_id',
         'title',
         'description',
-        'periode_tahun',
         'is_mandatory',
         'is_active',
         'start_date',
@@ -26,9 +25,14 @@ class Questionnaire extends Model
         'end_date' => 'date',
     ];
 
-    public function type(): BelongsTo
+    public function year(): BelongsTo
     {
-        return $this->belongsTo(QuestionnaireType::class, 'type_id');
+        return $this->belongsTo(Year::class, 'tahun_id');
+    }
+
+    public function prodis(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Prodi::class, 'questionnaire_prodi', 'questionnaire_id', 'prodi_id');
     }
 
     public function questions(): HasMany
@@ -51,14 +55,14 @@ class Questionnaire extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('questionnaires.is_active', true);
     }
 
     public function scopeOpen($query)
     {
         $now = now()->toDateString();
         return $query->active()
-            ->where('start_date', '<=', $now)
-            ->where('end_date', '>=', $now);
+            ->where('questionnaires.start_date', '<=', $now)
+            ->where('questionnaires.end_date', '>=', $now);
     }
 }

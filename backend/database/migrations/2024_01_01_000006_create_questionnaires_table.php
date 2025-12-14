@@ -10,14 +10,13 @@ return new class extends Migration
     {
         Schema::create('questionnaires', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('type_id')->constrained('questionnaire_types')->onDelete('cascade');
-            $table->string('title', 200);
+            $table->foreignId('tahun_id')->constrained('years')->onDelete('cascade');
+            $table->string('title');
             $table->text('description')->nullable();
-            $table->year('periode_tahun');
             $table->boolean('is_mandatory')->default(false);
             $table->boolean('is_active')->default(true);
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->timestamps();
         });
     }

@@ -18,4 +18,9 @@ class Prodi extends Model
     {
         return $this->hasMany(Alumni::class, 'prodi_id');
     }
+
+    public function questionnaires(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Questionnaire::class, 'questionnaire_prodi', 'prodi_id', 'questionnaire_id');
+    }
 }

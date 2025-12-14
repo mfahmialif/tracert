@@ -190,7 +190,7 @@ async function handleDelete() {
       >
         <CardHeader>
           <div class="flex justify-between items-start">
-            <Badge variant="outline">{{ q.type?.name || q.type }}</Badge>
+            <Badge variant="outline">{{ q.year?.name || q.tahun_id }}</Badge>
             <Badge
               :variant="q.is_active ? 'default' : 'secondary'"
               :class="q.is_active ? 'bg-green-600 hover:bg-green-700' : ''"
@@ -204,11 +204,30 @@ async function handleDelete() {
           }}</CardDescription>
         </CardHeader>
         <CardContent class="flex-1 text-sm text-muted-foreground">
-          <div class="flex justify-between py-1">
-            <span>Target:</span>
-            <span class="font-medium capitalize">{{
-              q.target_audience?.replace("_", " ") || "All"
-            }}</span>
+          <div class="flex flex-col gap-1 py-1">
+            <span>Target Prodi:</span>
+            <div class="flex flex-wrap gap-1">
+              <Badge
+                v-for="prodi in q.prodis.slice(0, 3)"
+                :key="prodi.id"
+                variant="secondary"
+                class="text-xs"
+              >
+                {{ prodi.name }}
+              </Badge>
+              <span
+                v-if="q.prodis.length > 3"
+                class="text-xs text-muted-foreground"
+              >
+                +{{ q.prodis.length - 3 }} lainnya
+              </span>
+              <span
+                v-if="q.prodis.length === 0"
+                class="text-xs text-muted-foreground"
+              >
+                Semua / Belum diset
+              </span>
+            </div>
           </div>
           <div class="flex justify-between py-1">
             <span>Wajib:</span>

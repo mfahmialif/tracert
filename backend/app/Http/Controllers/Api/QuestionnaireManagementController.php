@@ -11,15 +11,11 @@ class QuestionnaireManagementController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Questionnaire::with(['type', 'questions'])
+        $query = Questionnaire::with(['year', 'prodis', 'questions'])
             ->withCount('responses');
 
-        if ($request->filled('type_id')) {
-            $query->where('type_id', $request->type_id);
-        }
-
-        if ($request->filled('periode_tahun')) {
-            $query->where('periode_tahun', $request->periode_tahun);
+        if ($request->filled('tahun_id')) {
+            $query->where('tahun_id', $request->tahun_id);
         }
 
         if ($request->filled('is_active')) {
@@ -29,7 +25,7 @@ class QuestionnaireManagementController extends Controller
         // Sorting
         $sortField = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
-        $allowedSorts = ['title', 'created_at', 'updated_at', 'periode_tahun', 'is_active'];
+        $allowedSorts = ['title', 'created_at', 'updated_at', 'is_active'];
 
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortOrder);
@@ -37,7 +33,7 @@ class QuestionnaireManagementController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $perPage = min($request->input('per_page', 9), 100);
+        $perPage = min($request->input('per_page', 10), 100);
         $questionnaires = $query->paginate($perPage);
 
         return response()->json($questionnaires);
@@ -45,31 +41,34 @@ class QuestionnaireManagementController extends Controller
 
     public function show($id)
     {
-        $questionnaire = Questionnaire::with(['type', 'questions' => function ($q) {
+        $questionnaire = Questionnaire::with(['year', 'prodis', 'questions' => function ($q) {
             $q->orderBy('section')->orderBy('order');
         }])->withCount('responses')->findOrFail($id);
 
-        return response()->json(['data' => $questionnaire]);
-    }
+        $sections = $questionnaire->questions->groupBy('section');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'type_id' => 'required|exists:questionnaire_types,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'periode_tahun' => 'required|integer|min:2000|max:2100',
-            'is_mandatory' => 'boolean',
-            'is_active' => 'boolean',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-        ]);
+        // Transform to include sections structure
+        $data = $questionnaire->toArray();
+        $data['sections'] = $sections->map(function ($questions, $sectionNum) {
+            return [
+                'section' => $sectionNum,
+                'questions' => $questions->map(function ($q) {
+                    return [
+                        'id' => $q->id,
+                        'text' => $q->question_text,
+                        'type' => $q->type,
+                        'options' => $q->options,
+                        'is_required' => $q->is_required,
+                        'depends_on' => $q->depends_on,
+                        'depends_value' => $q->depends_value,
+                        'order' => $q->order,
+                        'section' => $q->section,
+                    ];
+                })->values(),
+            ];
+        })->values();
 
-        $questionnaire = Questionnaire::create($validated);
-        return response()->json([
-            'data' => $questionnaire,
-            'message' => 'Kuesioner berhasil dibuat'
-        ], 201);
+        return response()->json(['data' => $data]);
     }
 
     public function update(Request $request, $id)
@@ -77,19 +76,33 @@ class QuestionnaireManagementController extends Controller
         $questionnaire = Questionnaire::findOrFail($id);
 
         $validated = $request->validate([
-            'type_id' => 'required|exists:questionnaire_types,id',
+            'tahun_id' => 'required|exists:years,id',
+            'prodi_ids' => 'required|array',
+            'prodi_ids.*' => 'exists:prodis,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'periode_tahun' => 'required|integer|min:2000|max:2100',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $questionnaire->update($validated);
+        $questionnaire->update([
+            'tahun_id' => $validated['tahun_id'],
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'is_mandatory' => $validated['is_mandatory'] ?? false,
+            'is_active' => $validated['is_active'] ?? true,
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+        ]);
+
+        if (isset($validated['prodi_ids'])) {
+            $questionnaire->prodis()->sync($validated['prodi_ids']);
+        }
+
         return response()->json([
-            'data' => $questionnaire,
+            'data' => $questionnaire->load(['year', 'prodis']),
             'message' => 'Kuesioner berhasil diupdate'
         ]);
     }

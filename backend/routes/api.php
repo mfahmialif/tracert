@@ -27,6 +27,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Alumni routes
     Route::middleware(['role:alumni'])->group(function () {
+        Route::get('/questionnaires/counts', [QuestionnaireController::class, 'counts']);
         Route::get('/questionnaires', [QuestionnaireController::class, 'index']);
         Route::get('/questionnaires/{id}', [QuestionnaireController::class, 'show']);
         Route::post('/questionnaires/{id}/submit', [QuestionnaireController::class, 'submit'])

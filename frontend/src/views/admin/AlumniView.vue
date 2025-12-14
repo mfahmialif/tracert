@@ -151,7 +151,16 @@ const columns = [
     cell: (info) => info.getValue() || "-",
   }),
   columnHelper.accessor("year.name", {
-    header: "Tahun Lulus",
+    header: () => {
+      return h(
+        Button,
+        {
+          variant: "ghost",
+          onClick: () => handleSort("year.name"),
+        },
+        () => ["Tahun Lulus", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })]
+      );
+    },
     cell: (info) => info.getValue() || "-",
   }),
   columnHelper.accessor("status", {

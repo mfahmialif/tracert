@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ChevronLeft,
   Plus,
@@ -31,6 +32,7 @@ import {
   Edit2,
   GripVertical,
 } from "lucide-vue-next";
+import draggable from "vuedraggable";
 
 const route = useRoute();
 const router = useRouter();
@@ -39,7 +41,21 @@ const id = route.params.id;
 const questionnaire = ref<any>(null);
 const loading = ref(true);
 const showQuestionModal = ref(false);
+const showDetailsModal = ref(false);
 const editingQuestion = ref<any>(null);
+const years = ref<any[]>([]);
+const prodis = ref<any[]>([]);
+
+const detailsForm = ref({
+  title: "",
+  description: "",
+  tahun_id: "",
+  prodi_ids: [] as number[],
+  is_active: true,
+  is_mandatory: false,
+  start_date: "",
+  end_date: "",
+});
 
 // Question Form
 const questionForm = ref({
@@ -52,7 +68,21 @@ const questionForm = ref({
 
 onMounted(() => {
   fetchQuestionnaire();
+  fetchOptions();
 });
+
+async function fetchOptions() {
+  try {
+    const [yearRes, prodiRes] = await Promise.all([
+      api.get("/admin/years?per_page=100"),
+      api.get("/prodis?per_page=100"),
+    ]);
+    years.value = yearRes.data.data;
+    prodis.value = prodiRes.data.data;
+  } catch (e) {
+    console.error("Failed to fetch options", e);
+  }
+}
 
 async function fetchQuestionnaire() {
   loading.value = true;
@@ -64,13 +94,44 @@ async function fetchQuestionnaire() {
   }
 }
 
+function openEditDetails() {
+  if (!questionnaire.value) return;
+  detailsForm.value = {
+    title: questionnaire.value.title,
+    description: questionnaire.value.description,
+    tahun_id:
+      questionnaire.value.tahun_id?.toString() ||
+      questionnaire.value.year?.id?.toString(),
+    prodi_ids: questionnaire.value.prodis?.map((p: any) => p.id) || [],
+    is_active: questionnaire.value.is_active,
+    is_mandatory: questionnaire.value.is_mandatory,
+    start_date: questionnaire.value.start_date,
+    end_date: questionnaire.value.end_date,
+  };
+  showDetailsModal.value = true;
+}
+
+async function handleSaveDetails() {
+  try {
+    await api.put(`/admin/questionnaires/${id}`, detailsForm.value);
+    showDetailsModal.value = false;
+    fetchQuestionnaire();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 function openEditQuestion(q: any) {
   editingQuestion.value = q;
   questionForm.value = {
     section: q.section,
     type: q.type,
     text: q.text,
-    options: Array.isArray(q.options) ? q.options.join("\n") : q.options,
+    options: Array.isArray(q.options)
+      ? q.options.join("\n")
+      : typeof q.options === "object" && q.options !== null
+        ? Object.values(q.options).join("\n")
+        : q.options,
     is_required: q.is_required,
   };
   showQuestionModal.value = true;
@@ -88,8 +149,19 @@ function resetForm() {
 }
 
 async function handleSaveQuestion() {
+  // Calculate order (simple auto-increment based on total questions)
+  const totalQuestions =
+    questionnaire.value?.sections?.reduce(
+      (acc: number, section: any) => acc + (section.questions?.length || 0),
+      0
+    ) || 0;
+
   const payload = {
     ...questionForm.value,
+    question_text: questionForm.value.text, // Backend expects question_text
+    order: editingQuestion.value
+      ? editingQuestion.value.order
+      : totalQuestions + 1,
     options: questionForm.value.options
       ? questionForm.value.options.split("\n").filter((o) => o.trim())
       : null,
@@ -98,9 +170,11 @@ async function handleSaveQuestion() {
 
   try {
     if (editingQuestion.value) {
+      // For update, we might also need to ensure question_text is sent if backend requires it
       await api.put(`/admin/questions/${editingQuestion.value.id}`, payload);
     } else {
-      await api.post("/admin/questions", payload);
+      // Use correct nested endpoint for creation
+      await api.post(`/admin/questionnaires/${id}/questions`, payload);
     }
     showQuestionModal.value = false;
     fetchQuestionnaire();
@@ -119,6 +193,36 @@ async function handleDeleteQuestion(qId: number) {
     console.error(e);
   }
 }
+
+async function handleReorder() {
+  // Re-calculate order and section for all questions across all sections
+  const updates: any[] = [];
+
+  if (!questionnaire.value?.sections) return;
+
+  questionnaire.value.sections.forEach((section: any) => {
+    section.questions.forEach((q: any, index: number) => {
+      // Update order (1-based) and section if changed
+      updates.push({
+        id: q.id,
+        order: index + 1,
+        section: section.section,
+      });
+      // Update local state to reflect new section if moved
+      q.section = section.section;
+      q.order = index + 1;
+    });
+  });
+
+  try {
+    // Check route: POST /api/admin/questionnaires/{id}/questions/reorder
+    await api.post(`/admin/questionnaires/${id}/questions/reorder`, {
+      questions: updates,
+    });
+  } catch (e) {
+    console.error("Failed to reorder", e);
+  }
+}
 </script>
 
 <template>
@@ -131,12 +235,20 @@ async function handleDeleteQuestion(qId: number) {
             <ChevronLeft class="h-4 w-4" />
           </Button>
           <div>
-            <h1 class="text-2xl font-bold">{{ questionnaire?.title }}</h1>
+            <div class="flex items-center gap-2">
+              <h1 class="text-2xl font-bold">{{ questionnaire?.title }}</h1>
+              <Button variant="ghost" size="icon" @click="openEditDetails">
+                <Edit2 class="h-4 w-4" />
+              </Button>
+            </div>
             <p class="text-muted-foreground text-sm">
-              Edit pertanyaan dan struktur
+              {{ questionnaire?.year?.name }} •
+              {{ questionnaire?.is_active ? "Aktif" : "Draft" }}
             </p>
           </div>
         </div>
+
+        <!-- Question Modal Trigger -->
         <Dialog v-model:open="showQuestionModal">
           <DialogTrigger as-child>
             <Button @click="resetForm"
@@ -144,6 +256,7 @@ async function handleDeleteQuestion(qId: number) {
             >
           </DialogTrigger>
           <DialogContent class="sm:max-w-[500px]">
+            <!-- ... existing question modal content ... -->
             <DialogHeader>
               <DialogTitle>{{
                 editingQuestion ? "Edit Pertanyaan" : "Tambah Pertanyaan"
@@ -166,6 +279,7 @@ async function handleDeleteQuestion(qId: number) {
                         >Pilihan Ganda (Radio)</SelectItem
                       >
                       <SelectItem value="checkbox">Kotak Centang</SelectItem>
+                      <SelectItem value="scale">Skala Likert</SelectItem>
                       <SelectItem value="select">Dropdown</SelectItem>
                       <SelectItem value="date">Tanggal</SelectItem>
                     </SelectContent>
@@ -185,7 +299,9 @@ async function handleDeleteQuestion(qId: number) {
               <div
                 class="space-y-2"
                 v-if="
-                  ['radio', 'checkbox', 'select'].includes(questionForm.type)
+                  ['radio', 'checkbox', 'select', 'scale'].includes(
+                    questionForm.type
+                  )
                 "
               >
                 <Label>Opsi Jawaban (pisahkan dengan baris baru)</Label>
@@ -197,7 +313,6 @@ async function handleDeleteQuestion(qId: number) {
               </div>
 
               <div class="flex items-center space-x-2">
-                <!-- Simple check input for required -->
                 <input
                   type="checkbox"
                   id="req"
@@ -212,6 +327,83 @@ async function handleDeleteQuestion(qId: number) {
                 >Batal</Button
               >
               <Button @click="handleSaveQuestion">Simpan</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <!-- Edit Details Modal -->
+        <Dialog v-model:open="showDetailsModal">
+          <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Detail Kuesioner</DialogTitle>
+            </DialogHeader>
+            <div class="space-y-4 py-4">
+              <div class="space-y-2">
+                <Label>Judul</Label>
+                <Input v-model="detailsForm.title" />
+              </div>
+              <div class="space-y-2">
+                <Label>Deskripsi</Label>
+                <Textarea v-model="detailsForm.description" />
+              </div>
+              <div class="space-y-2">
+                <Label>Tahun</Label>
+                <Select v-model="detailsForm.tahun_id">
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="y in years"
+                      :key="y.id"
+                      :value="y.id.toString()"
+                      >{{ y.name }}</SelectItem
+                    >
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="space-y-2">
+                <Label>Target Prodi</Label>
+                <div
+                  class="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2"
+                >
+                  <div
+                    v-for="prodi in prodis"
+                    :key="prodi.id"
+                    class="flex items-center space-x-2"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="detailsForm.prodi_ids.includes(prodi.id)"
+                      @change="
+                        (e) => {
+                          if (e.target.checked)
+                            detailsForm.prodi_ids.push(prodi.id);
+                          else
+                            detailsForm.prodi_ids =
+                              detailsForm.prodi_ids.filter(
+                                (id) => id !== prodi.id
+                              );
+                        }
+                      "
+                      class="h-4 w-4"
+                    />
+                    <Label>{{ prodi.name }}</Label>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  v-model="detailsForm.is_active"
+                  class="h-4 w-4"
+                />
+                <Label>Aktif</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="secondary" @click="showDetailsModal = false"
+                >Batal</Button
+              >
+              <Button @click="handleSaveDetails">Simpan Perubahan</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -233,45 +425,61 @@ async function handleDeleteQuestion(qId: number) {
           <CardHeader class="pb-2">
             <CardTitle class="text-lg">Bagian {{ section.section }}</CardTitle>
           </CardHeader>
-          <CardContent class="grid gap-4">
-            <div
-              v-for="q in section.questions"
-              :key="q.id"
-              class="group flex items-start gap-4 rounded-lg border p-4 bg-card hover:bg-muted/50 transition-colors relative"
+          <CardContent>
+            <draggable
+              v-model="section.questions"
+              group="questions"
+              @change="handleReorder"
+              item-key="id"
+              class="grid gap-4"
+              handle=".cursor-move"
             >
-              <GripVertical
-                class="h-5 w-5 text-muted-foreground mt-1 cursor-move opacity-0 group-hover:opacity-100"
-              />
-              <div class="flex-1 space-y-1">
-                <div class="flex items-start justify-between">
-                  <p class="font-medium">
-                    {{ q.text }}
-                    <span v-if="q.is_required" class="text-destructive">*</span>
-                  </p>
-                  <Badge variant="outline" class="text-xs">{{ q.type }}</Badge>
-                </div>
+              <template #item="{ element: q }">
                 <div
-                  v-if="['radio', 'checkbox', 'select'].includes(q.type)"
-                  class="text-sm text-muted-foreground pl-2 border-l-2"
+                  class="group flex items-start gap-4 rounded-lg border p-4 bg-card hover:bg-muted/50 transition-colors relative"
                 >
-                  <div v-for="opt in q.options" :key="opt">• {{ opt }}</div>
+                  <GripVertical
+                    class="h-5 w-5 text-muted-foreground mt-1 cursor-move opacity-0 group-hover:opacity-100"
+                  />
+                  <div class="flex-1 space-y-1">
+                    <div class="flex items-start justify-between">
+                      <p class="font-medium">
+                        {{ q.text }}
+                        <span v-if="q.is_required" class="text-destructive"
+                          >*</span
+                        >
+                      </p>
+                      <Badge variant="outline" class="text-xs">{{
+                        q.type
+                      }}</Badge>
+                    </div>
+                    <div
+                      v-if="['radio', 'checkbox', 'select'].includes(q.type)"
+                      class="text-sm text-muted-foreground pl-2 border-l-2"
+                    >
+                      <div v-for="opt in q.options" :key="opt">• {{ opt }}</div>
+                    </div>
+                  </div>
+                  <div
+                    class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      @click="openEditQuestion(q)"
+                      ><Edit2 class="h-4 w-4"
+                    /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="text-destructive hover:text-destructive"
+                      @click="handleDeleteQuestion(q.id)"
+                      ><Trash2 class="h-4 w-4"
+                    /></Button>
+                  </div>
                 </div>
-              </div>
-              <div
-                class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Button variant="ghost" size="icon" @click="openEditQuestion(q)"
-                  ><Edit2 class="h-4 w-4"
-                /></Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="text-destructive hover:text-destructive"
-                  @click="handleDeleteQuestion(q.id)"
-                  ><Trash2 class="h-4 w-4"
-                /></Button>
-              </div>
-            </div>
+              </template>
+            </draggable>
           </CardContent>
         </Card>
       </div>

@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             ProdiSeeder::class,
             YearSeeder::class,
             UserSeeder::class,
-            QuestionnaireTypeSeeder::class,
+            // QuestionnaireTypeSeeder::class, // Removed
             AlumniSeeder::class,
             QuestionnaireSeeder::class,
         ]);

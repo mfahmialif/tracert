@@ -45,6 +45,22 @@ class AlumniController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Sorting
+        if ($request->filled('sort_by')) {
+            $sortBy = $request->sort_by;
+            $sortOrder = $request->input('sort_order', 'asc');
+
+            if ($sortBy === 'year.name') {
+                $query->join('years', 'alumni.tahun_id', '=', 'years.id')
+                    ->orderBy('years.name', $sortOrder)
+                    ->select('alumni.*'); // Avoid column collision
+            } elseif (in_array($sortBy, ['nim', 'nama', 'status', 'created_at'])) {
+                $query->orderBy($sortBy, $sortOrder);
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
         return response()->json($query->paginate($perPage));
     }
 
