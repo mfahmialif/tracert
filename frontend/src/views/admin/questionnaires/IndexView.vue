@@ -13,6 +13,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "vue-sonner";
 import {
   Dialog,
   DialogContent,
@@ -176,10 +177,12 @@ async function handleDelete() {
   if (!deleteId.value) return;
   try {
     await api.delete(`/admin/questionnaires/${deleteId.value}`);
+    toast.success("Kuesioner berhasil dihapus");
     fetchQuestionnaires();
     deleteId.value = null;
-  } catch (e) {
+  } catch (e: any) {
     console.error("Failed to delete");
+    toast.error(e.response?.data?.message || "Gagal menghapus kuesioner");
   }
 }
 </script>

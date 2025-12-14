@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const formError = ref<string | null>(null);
@@ -30,10 +31,14 @@ async function handleSubmit() {
   loading.value = true;
   try {
     await api.post("/admin/faculties", form);
+    toast.success("Data fakultas berhasil ditambahkan");
     router.push("/admin/faculties");
   } catch (error: any) {
     console.error("Failed to save faculty", error);
     formError.value = error.response?.data?.message || "Gagal menyimpan data";
+    toast.error(
+      error.response?.data?.message || "Gagal menyimpan data fakultas"
+    );
   } finally {
     loading.value = false;
   }

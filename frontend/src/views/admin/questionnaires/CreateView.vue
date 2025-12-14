@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/services/api";
+import { toast } from "vue-sonner";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,9 +65,11 @@ async function handleSubmit() {
       // Ensure prodi_ids are numbers
       prodi_ids: form.value.prodi_ids.map(Number),
     });
+    toast.success("Kuesioner berhasil ditambahkan");
     router.push("/admin/questionnaires");
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
+    toast.error(e.response?.data?.message || "Gagal menyimpan kuesioner");
   } finally {
     loading.value = false;
   }

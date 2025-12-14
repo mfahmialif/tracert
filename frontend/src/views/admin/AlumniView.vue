@@ -57,6 +57,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const alumni = ref<any[]>([]);
@@ -337,10 +338,11 @@ async function handleDelete(id: number) {
 
   try {
     await api.delete(`/admin/alumni/${id}`);
+    toast.success("Data alumni berhasil dihapus");
     fetchAlumni();
   } catch (error) {
     console.error("Failed to delete alumni", error);
-    alert("Gagal menghapus alumni");
+    toast.error("Gagal menghapus alumni");
   }
 }
 
@@ -364,12 +366,14 @@ async function handleImport() {
       headers: { "Content-Type": "multipart/form-data" },
     });
     importResult.value = response.data;
+    toast.success(`Berhasil import ${response.data.imported || 0} data alumni`);
     fetchAlumni();
     showImportModal.value = false;
   } catch (error: any) {
     importResult.value = {
       error: error.response?.data?.message || "Import failed",
     };
+    toast.error(error.response?.data?.message || "Import gagal");
   } finally {
     importing.value = false;
   }

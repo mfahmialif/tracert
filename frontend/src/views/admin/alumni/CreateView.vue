@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const prodis = ref<any[]>([]);
@@ -71,10 +72,12 @@ async function handleSubmit() {
   loading.value = true;
   try {
     await api.post("/admin/alumni", form);
+    toast.success("Data alumni berhasil ditambahkan");
     router.push("/admin/alumni");
   } catch (error: any) {
     console.error("Failed to save alumni", error);
     formError.value = error.response?.data?.message || "Gagal menyimpan data";
+    toast.error(error.response?.data?.message || "Gagal menyimpan data alumni");
   } finally {
     loading.value = false;
   }

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const formError = ref<string | null>(null);
@@ -53,10 +54,12 @@ async function handleSubmit() {
   loading.value = true;
   try {
     await api.post("/admin/prodis", form);
+    toast.success("Data prodi berhasil ditambahkan");
     router.push("/admin/prodis");
   } catch (error: any) {
     console.error("Failed to save prodi", error);
     formError.value = error.response?.data?.message || "Gagal menyimpan data";
+    toast.error(error.response?.data?.message || "Gagal menyimpan data prodi");
   } finally {
     loading.value = false;
   }

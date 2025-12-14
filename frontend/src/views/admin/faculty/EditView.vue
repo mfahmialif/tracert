@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter, useRoute } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const route = useRoute();
@@ -47,10 +48,14 @@ async function handleSubmit() {
   loading.value = true;
   try {
     await api.put(`/admin/faculties/${route.params.id}`, form);
+    toast.success("Data fakultas berhasil diperbarui");
     router.push("/admin/faculties");
   } catch (error: any) {
     console.error("Failed to update faculty", error);
     formError.value = error.response?.data?.message || "Gagal memperbarui data";
+    toast.error(
+      error.response?.data?.message || "Gagal memperbarui data fakultas"
+    );
   } finally {
     loading.value = false;
   }

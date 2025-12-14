@@ -4,6 +4,7 @@ import api from "@/services/api";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "vue-sonner";
 import { useRouter } from "vue-router";
 import {
   Table,
@@ -235,10 +236,13 @@ async function handleDelete(id: number) {
 
   try {
     await api.delete(`/admin/years/${id}`);
+    toast.success("Data tahun akademik berhasil dihapus");
     fetchYears();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to delete year", error);
-    alert("Gagal menghapus tahun akademik");
+    toast.error(
+      error.response?.data?.message || "Gagal menghapus tahun akademik"
+    );
   }
 }
 </script>

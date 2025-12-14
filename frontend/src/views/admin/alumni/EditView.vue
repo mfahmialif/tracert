@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card";
 import { useRouter, useRoute } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const route = useRoute();
@@ -93,11 +94,13 @@ async function handleSubmit() {
   const id = route.params.id;
   try {
     await api.put(`/admin/alumni/${id}`, form);
+    toast.success("Data alumni berhasil diperbarui");
     router.push("/admin/alumni");
   } catch (error: any) {
     console.error("Failed to update alumni", error);
     formError.value =
       error.response?.data?.message || "Gagal menyimpan perubahan";
+    toast.error(error.response?.data?.message || "Gagal menyimpan perubahan");
   } finally {
     loading.value = false;
   }

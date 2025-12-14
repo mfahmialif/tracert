@@ -5,6 +5,7 @@ import AdminLayout from "@/layouts/AdminLayout.vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 import {
   Table,
   TableBody,
@@ -223,10 +224,11 @@ async function handleDelete(id: number) {
 
   try {
     await api.delete(`/admin/prodis/${id}`);
+    toast.success("Data prodi berhasil dihapus");
     fetchProdis();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to delete prodi", error);
-    alert("Gagal menghapus prodi");
+    toast.error(error.response?.data?.message || "Gagal menghapus prodi");
   }
 }
 </script>

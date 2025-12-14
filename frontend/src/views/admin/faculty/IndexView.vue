@@ -1,10 +1,13 @@
+```vue
 <script setup lang="ts">
 import { ref, onMounted, h, computed } from "vue";
 import api from "@/services/api";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "vue-router";
+import { toast } from "vue-sonner";
 import {
   Table,
   TableBody,
@@ -215,10 +218,11 @@ async function handleDelete(id: number) {
 
   try {
     await api.delete(`/admin/faculties/${id}`);
+    toast.success("Data fakultas berhasil dihapus");
     fetchFaculties();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to delete faculty", error);
-    alert("Gagal menghapus fakultas");
+    toast.error(error.response?.data?.message || "Gagal menghapus fakultas");
   }
 }
 </script>

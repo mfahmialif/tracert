@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ArrowLeft, Save } from "lucide-vue-next";
+import { toast } from "vue-sonner";
 import {
   Select,
   SelectContent,
@@ -41,13 +42,14 @@ async function handleSubmit() {
   error.value = "";
   try {
     await api.post("/admin/years", form.value);
+    toast.success("Data tahun akademik berhasil ditambahkan");
     router.push("/admin/years");
   } catch (err: any) {
-    if (err.response?.data?.message) {
-      error.value = err.response.data.message;
-    } else {
-      error.value = "Terjadi kesalahan saat menyimpan data";
-    }
+    error.value =
+      err.response?.data?.message || "Terjadi kesalahan saat menyimpan data";
+    toast.error(
+      err.response?.data?.message || "Gagal menyimpan data tahun akademik"
+    );
   } finally {
     loading.value = false;
   }
