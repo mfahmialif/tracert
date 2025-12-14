@@ -141,7 +141,7 @@ async function handleSubmit() {
                     :id="'prodi-' + prodi.id"
                     :checked="form.prodi_ids.includes(prodi.id)"
                     @update:checked="
-                      (checked) => {
+                      (checked: boolean) => {
                         if (checked) form.prodi_ids.push(prodi.id);
                         else
                           form.prodi_ids = form.prodi_ids.filter(
@@ -158,17 +158,6 @@ async function handleSubmit() {
               <p class="text-xs text-muted-foreground">
                 Pilih program studi yang dituju.
               </p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <Label>Tanggal Mulai</Label>
-              <Input type="date" v-model="form.start_date" />
-            </div>
-            <div class="space-y-2">
-              <Label>Tanggal Selesai</Label>
-              <Input type="date" v-model="form.end_date" />
             </div>
           </div>
 

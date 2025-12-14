@@ -3,7 +3,14 @@ import { onMounted, computed } from "vue";
 import { useDashboardStore } from "../../stores/dashboard";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import { useTheme } from "../../composables/useTheme";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Bar } from "vue-chartjs";
 import {
   Chart as ChartJS,
@@ -91,9 +98,10 @@ const yearChartData = computed(() => ({
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
-            {{ dashStore.data?.summary?.total_alumni || 0 }}
+            <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
+            <span v-else>{{ dashStore.data?.summary?.total_alumni || 0 }}</span>
           </div>
-          <p class="text-xs text-muted-foreground">+20.1% from last month</p>
+          <CardDescription>+20.1% from last month</CardDescription>
         </CardContent>
       </Card>
       <Card>
@@ -105,9 +113,12 @@ const yearChartData = computed(() => ({
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
-            {{ dashStore.data?.summary?.total_responses || 0 }}
+            <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
+            <span v-else>{{
+              dashStore.data?.summary?.total_responses || 0
+            }}</span>
           </div>
-          <p class="text-xs text-muted-foreground">Total submissions</p>
+          <CardDescription>Total submissions</CardDescription>
         </CardContent>
       </Card>
       <Card>
@@ -119,9 +130,12 @@ const yearChartData = computed(() => ({
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
-            {{ dashStore.data?.summary?.active_questionnaires || 0 }}
+            <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
+            <span v-else>{{
+              dashStore.data?.summary?.active_questionnaires || 0
+            }}</span>
           </div>
-          <p class="text-xs text-muted-foreground">Accepting responses</p>
+          <CardDescription>Accepting responses</CardDescription>
         </CardContent>
       </Card>
       <Card>
@@ -133,9 +147,12 @@ const yearChartData = computed(() => ({
         </CardHeader>
         <CardContent>
           <div class="text-2xl font-bold">
-            {{ dashStore.data?.summary?.response_rate || 0 }}%
+            <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
+            <span v-else
+              >{{ dashStore.data?.summary?.response_rate || 0 }}%</span
+            >
           </div>
-          <p class="text-xs text-muted-foreground">Average completion</p>
+          <CardDescription>Average completion</CardDescription>
         </CardContent>
       </Card>
     </div>

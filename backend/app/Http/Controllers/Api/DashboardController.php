@@ -24,9 +24,9 @@ class DashboardController extends Controller
             });
         }
 
-        if ($request->filled('tahun_lulus')) {
+        if ($request->filled('tahun_id')) {
             $responseQuery->whereHas('alumni', function ($q) use ($request) {
-                $q->where('tahun_lulus', $request->tahun_lulus);
+                $q->where('tahun_id', $request->tahun_id);
             });
         }
 
@@ -34,9 +34,9 @@ class DashboardController extends Controller
             $responseQuery->where('questionnaire_id', $request->questionnaire_id);
         }
 
-        if ($request->filled('periode_tahun')) {
+        if ($request->filled('tahun_id')) {
             $responseQuery->whereHas('questionnaire', function ($q) use ($request) {
-                $q->where('periode_tahun', $request->periode_tahun);
+                $q->where('tahun_id', $request->tahun_id);
             });
         }
 
@@ -67,21 +67,22 @@ class DashboardController extends Controller
             });
 
         // Response per tahun lulus
-        $responsePerTahun = Alumni::select('tahun_lulus')
+        $responsePerTahun = Alumni::select('years.name as tahun_name', 'alumni.tahun_id')
+            ->join('years', 'alumni.tahun_id', 'years.id')
             ->selectRaw('COUNT(*) as total_alumni')
-            ->groupBy('tahun_lulus')
-            ->orderBy('tahun_lulus', 'desc')
+            ->groupBy('years.name', 'alumni.tahun_id')
+            ->orderBy('years.name', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($row) use ($request) {
                 $responseCount = Response::whereHas('alumni', function ($q) use ($row) {
-                    $q->where('tahun_lulus', $row->tahun_lulus);
+                    $q->where('tahun_id', $row->tahun_id);
                 })->when($request->filled('questionnaire_id'), function ($q) use ($request) {
                     $q->where('questionnaire_id', $request->questionnaire_id);
                 })->count();
 
                 return [
-                    'tahun' => $row->tahun_lulus,
+                    'tahun' => $row->tahun_name,
                     'total_alumni' => $row->total_alumni,
                     'total_responses' => $responseCount,
                     'percentage' => $row->total_alumni > 0
@@ -92,13 +93,13 @@ class DashboardController extends Controller
 
         // Questionnaire stats - limit removed, will be paginated in frontend
         $questionnaireStats = Questionnaire::withCount('responses')
-            ->orderBy('periode_tahun', 'desc')
+            ->orderBy('tahun_id', 'desc')
             ->get()
             ->map(function ($q) {
                 return [
                     'id' => $q->id,
                     'title' => $q->title,
-                    'periode' => $q->periode_tahun,
+                    'periode' => $q->tahun_id,
                     'responses_count' => $q->responses_count,
                     'is_active' => $q->isOpen(),
                 ];

@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class QuestionnaireManagementController extends Controller
 {
@@ -52,6 +53,42 @@ class QuestionnaireManagementController extends Controller
         $questionnaires = $query->paginate($perPage);
 
         return response()->json($questionnaires);
+    }
+
+    public function store(Request $request)
+    {
+        Log::info('Questionnaire Store Payload:', $request->all());
+
+        $validated = $request->validate([
+            'tahun_id' => 'required|exists:years,id',
+            'prodi_ids' => 'present|array',
+            'prodi_ids.*' => 'exists:prodis,id',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'is_mandatory' => 'boolean',
+            'is_active' => 'boolean',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        $questionnaire = Questionnaire::create([
+            'tahun_id' => $validated['tahun_id'],
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'is_mandatory' => $validated['is_mandatory'] ?? false,
+            'is_active' => $validated['is_active'] ?? true,
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+        ]);
+
+        if (isset($validated['prodi_ids'])) {
+            $questionnaire->prodis()->sync($validated['prodi_ids']);
+        }
+
+        return response()->json([
+            'data' => $questionnaire->load(['year', 'prodis']),
+            'message' => 'Kuesioner berhasil dibuat'
+        ], 201);
     }
 
     public function show($id)

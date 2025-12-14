@@ -44,8 +44,10 @@ const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, route: "/admin" },
   { label: "Alumni", icon: Users, route: "/admin/alumni" },
   { label: "Kuesioner", icon: FileText, route: "/admin/questionnaires" },
-  { label: "Export", icon: Download, route: "/admin/export" },
 ];
+
+const dashboardItem = sidebarItems[0];
+const remainingItems = sidebarItems.slice(1);
 
 const isActive = (path: string) => route.path === path;
 
@@ -137,20 +139,18 @@ async function handleLogout() {
           <!-- Desktop Nav -->
           <nav class="hidden md:flex items-center gap-1">
             <!-- First Item (Dashboard) -->
-            <template v-if="sidebarItems.length > 0">
+            <template v-if="dashboardItem">
               <Button
-                :variant="
-                  isActive(sidebarItems[0].route) ? 'secondary' : 'ghost'
-                "
+                :variant="isActive(dashboardItem.route) ? 'secondary' : 'ghost'"
                 size="sm"
                 class="justify-start gap-2"
                 :class="{
-                  'bg-primary/10 text-primary': isActive(sidebarItems[0].route),
+                  'bg-primary/10 text-primary': isActive(dashboardItem.route),
                 }"
-                @click="router.push(sidebarItems[0].route)"
+                @click="router.push(dashboardItem.route)"
               >
-                <component :is="sidebarItems[0].icon" class="h-4 w-4" />
-                {{ sidebarItems[0].label }}
+                <component :is="dashboardItem.icon" class="h-4 w-4" />
+                {{ dashboardItem.label }}
               </Button>
             </template>
 
@@ -176,7 +176,7 @@ async function handleLogout() {
             </DropdownMenu>
 
             <!-- Remaining Items -->
-            <template v-for="item in sidebarItems.slice(1)" :key="item.route">
+            <template v-for="item in remainingItems" :key="item.route">
               <Button
                 :variant="isActive(item.route) ? 'secondary' : 'ghost'"
                 size="sm"

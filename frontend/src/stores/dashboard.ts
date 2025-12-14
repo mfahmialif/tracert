@@ -50,6 +50,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     try {
       const params = new URLSearchParams(filters).toString()
       const response = await api.get(`/admin/dashboard?${params}`)
+      console.log(response);
       data.value = response.data
     } catch (e: any) {
       error.value = e.response?.data?.message || 'Gagal memuat dashboard'

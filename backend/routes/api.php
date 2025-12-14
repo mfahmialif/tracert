@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\AlumniController;
 use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\ExportController;
+
 use App\Http\Controllers\Api\ProdiController;
 use App\Http\Controllers\Api\YearController;
 use App\Http\Controllers\Api\QuestionnaireTypeController;
@@ -44,8 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/alumni/{id}', [AlumniController::class, 'destroy']);
         Route::post('/alumni/import', [AlumniController::class, 'import']);
         Route::get('/alumni/template', [AlumniController::class, 'downloadTemplate']);
-        Route::get('/export/excel', [ExportController::class, 'excel']);
-        Route::get('/export/pdf', [ExportController::class, 'pdf']);
+
 
         // Questionnaire Type Management
         Route::get('/questionnaire-types', [QuestionnaireTypeController::class, 'index']);
