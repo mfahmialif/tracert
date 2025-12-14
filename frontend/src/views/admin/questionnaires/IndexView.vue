@@ -297,7 +297,7 @@ async function handleDelete() {
       >
         <CardHeader>
           <div class="flex justify-between items-start">
-            <Badge variant="outline">{{ q.year?.name || q.tahun_id }}</Badge>
+            <Badge variant="outline">{{ q.year?.name || q.year_id }}</Badge>
             <Badge
               :variant="q.is_active ? 'default' : 'secondary'"
               :class="q.is_active ? 'bg-green-600 hover:bg-green-700' : ''"

@@ -20,8 +20,8 @@ class QuestionnaireManagementController extends Controller
         $query = Questionnaire::with(['year', 'prodis', 'questions'])
             ->withCount(['responses', 'questions']);
 
-        if ($request->filled('tahun_id')) {
-            $query->where('tahun_id', $request->tahun_id);
+        if ($request->filled('year_id')) {
+            $query->where('year_id', $request->year_id);
         }
 
         if ($request->filled('is_active')) {
@@ -60,7 +60,7 @@ class QuestionnaireManagementController extends Controller
         Log::info('Questionnaire Store Payload:', $request->all());
 
         $validated = $request->validate([
-            'tahun_id' => 'required|exists:years,id',
+            'year_id' => 'required|exists:years,id',
             'prodi_ids' => 'present|array',
             'prodi_ids.*' => 'exists:prodis,id',
             'title' => 'required|string|max:255',
@@ -72,7 +72,7 @@ class QuestionnaireManagementController extends Controller
         ]);
 
         $questionnaire = Questionnaire::create([
-            'tahun_id' => $validated['tahun_id'],
+            'year_id' => $validated['year_id'],
             'title' => $validated['title'],
             'description' => $validated['description'],
             'is_mandatory' => $validated['is_mandatory'] ?? false,
@@ -128,7 +128,7 @@ class QuestionnaireManagementController extends Controller
         $questionnaire = Questionnaire::findOrFail($id);
 
         $validated = $request->validate([
-            'tahun_id' => 'required|exists:years,id',
+            'year_id' => 'required|exists:years,id',
             'prodi_ids' => 'required|array',
             'prodi_ids.*' => 'exists:prodis,id',
             'title' => 'required|string|max:255',
@@ -140,7 +140,7 @@ class QuestionnaireManagementController extends Controller
         ]);
 
         $questionnaire->update([
-            'tahun_id' => $validated['tahun_id'],
+            'year_id' => $validated['year_id'],
             'title' => $validated['title'],
             'description' => $validated['description'],
             'is_mandatory' => $validated['is_mandatory'] ?? false,

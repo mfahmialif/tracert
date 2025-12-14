@@ -34,7 +34,7 @@ const form = reactive({
   nim: "",
   nama: "",
   prodi_id: "",
-  tahun_id: "",
+  year_id: "",
   email: "",
   no_hp: "",
   status: "",
@@ -150,8 +150,8 @@ async function handleSubmit() {
             </div>
 
             <div class="grid gap-2">
-              <Label for="tahun_id">Tahun Lulus</Label>
-              <Select v-model="form.tahun_id">
+              <Label for="year_id">Tahun Lulus</Label>
+              <Select v-model="form.year_id">
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Tahun Lulus" />
                 </SelectTrigger>

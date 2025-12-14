@@ -15,7 +15,7 @@ class QuestionnaireSeeder extends Seeder
 
         // Tracer Study Umum 2024
         $questionnaire = Questionnaire::create([
-            'tahun_id' => $year->id,
+            'year_id' => $year->id,
             'title' => 'Tracer Study 2024',
             'description' => 'Kuesioner tracer study untuk lulusan tahun 2024',
             'is_mandatory' => true,
@@ -132,7 +132,7 @@ class QuestionnaireSeeder extends Seeder
         // Kepuasan Lulusan 2024
         // Kepuasan Lulusan 2024
         $questionnaire2 = Questionnaire::create([
-            'tahun_id' => $year->id,
+            'year_id' => $year->id,
             'title' => 'Kepuasan Lulusan 2024',
             'description' => 'Survei kepuasan lulusan terhadap layanan kampus',
             'is_mandatory' => false,
@@ -179,7 +179,7 @@ class QuestionnaireSeeder extends Seeder
 
         for ($i = 0; $i < 100; $i++) {
             $q = Questionnaire::create([
-                'tahun_id' => $years->random()->id,
+                'year_id' => $years->random()->id,
                 'title' => $faker->sentence(4),
                 'description' => $faker->paragraph(),
                 'is_mandatory' => $faker->boolean(30), // 30% mandatory

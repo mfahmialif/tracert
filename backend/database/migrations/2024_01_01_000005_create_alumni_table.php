@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('nim', 20)->unique();
             $table->string('nama', 100);
             $table->string('email');
-            $table->foreignId('tahun_id')->constrained('years')->cascadeOnDelete();
+            $table->foreignId('year_id')->constrained('years')->cascadeOnDelete();
             $table->string('no_hp')->nullable();
             $table->enum('status', ['Bekerja', 'Mencari Kerja', 'Wirausaha', 'Studi Lanjut', 'Belum Bekerja'])->default('Belum Bekerja');
             $table->timestamps();

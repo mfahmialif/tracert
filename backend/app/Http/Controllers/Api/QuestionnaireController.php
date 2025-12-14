@@ -92,7 +92,7 @@ class QuestionnaireController extends Controller
         if ($sortBy === 'title') {
             $query->orderBy('title', $sortOrder);
         } elseif ($sortBy === 'year') {
-            $query->join('years', 'questionnaires.tahun_id', '=', 'years.id')
+            $query->join('years', 'questionnaires.year_id', '=', 'years.id')
                 ->orderBy('years.name', $sortOrder)
                 ->select('questionnaires.*');
         } elseif ($sortBy === 'newest' || $sortBy === 'created_at') {

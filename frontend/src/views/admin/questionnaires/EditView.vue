@@ -49,7 +49,7 @@ const prodis = ref<any[]>([]);
 const detailsForm = ref({
   title: "",
   description: "",
-  tahun_id: "",
+  year_id: "",
   prodi_ids: [] as number[],
   is_active: true,
   is_mandatory: false,
@@ -99,8 +99,8 @@ function openEditDetails() {
   detailsForm.value = {
     title: questionnaire.value.title,
     description: questionnaire.value.description,
-    tahun_id:
-      questionnaire.value.tahun_id?.toString() ||
+    year_id:
+      questionnaire.value.year_id?.toString() ||
       questionnaire.value.year?.id?.toString(),
     prodi_ids: questionnaire.value.prodis?.map((p: any) => p.id) || [],
     is_active: questionnaire.value.is_active,
@@ -348,7 +348,7 @@ async function handleReorder() {
               </div>
               <div class="space-y-2">
                 <Label>Tahun</Label>
-                <Select v-model="detailsForm.tahun_id">
+                <Select v-model="detailsForm.year_id">
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem

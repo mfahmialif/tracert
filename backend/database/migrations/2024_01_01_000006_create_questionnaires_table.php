@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('questionnaires', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tahun_id')->constrained('years')->onDelete('cascade');
+            $table->foreignId('year_id')->constrained('years')->onDelete('cascade');
             $table->string('title');
             $table->text('description')->nullable();
             $table->boolean('is_mandatory')->default(false);

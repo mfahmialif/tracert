@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Questionnaire extends Model
 {
     protected $fillable = [
-        'tahun_id',
+        'year_id',
         'title',
         'description',
         'is_mandatory',
@@ -27,7 +27,7 @@ class Questionnaire extends Model
 
     public function year(): BelongsTo
     {
-        return $this->belongsTo(Year::class, 'tahun_id');
+        return $this->belongsTo(Year::class, 'year_id');
     }
 
     public function prodis(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

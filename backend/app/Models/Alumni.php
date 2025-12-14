@@ -17,7 +17,7 @@ class Alumni extends Model
         'nim',
         'nama',
         'prodi_id',
-        'tahun_id',
+        'year_id',
         'email',
         'no_hp',
         'status',
@@ -30,7 +30,7 @@ class Alumni extends Model
 
     public function year(): BelongsTo
     {
-        return $this->belongsTo(Year::class, 'tahun_id');
+        return $this->belongsTo(Year::class, 'year_id');
     }
 
     public function user(): BelongsTo

@@ -36,8 +36,8 @@ class AlumniController extends Controller
         }
 
         // Filter by Year
-        if ($request->filled('tahun_id') && $request->tahun_id !== 'all') {
-            $query->where('tahun_id', $request->tahun_id);
+        if ($request->filled('year_id') && $request->year_id !== 'all') {
+            $query->where('year_id', $request->year_id);
         }
 
         // Filter by Status
@@ -51,7 +51,7 @@ class AlumniController extends Controller
             $sortOrder = $request->input('sort_order', 'asc');
 
             if ($sortBy === 'year.name') {
-                $query->join('years', 'alumni.tahun_id', '=', 'years.id')
+                $query->join('years', 'alumni.year_id', '=', 'years.id')
                     ->orderBy('years.name', $sortOrder)
                     ->select('alumni.*'); // Avoid column collision
             } elseif (in_array($sortBy, ['nim', 'nama', 'status', 'created_at'])) {
@@ -71,7 +71,7 @@ class AlumniController extends Controller
             'nim' => 'required|string|max:20|unique:alumni,nim',
             'nama' => 'required|string|max:100',
             'prodi_id' => 'required|exists:prodis,id',
-            'tahun_id' => 'required|exists:years,id',
+            'year_id' => 'required|exists:years,id',
             'email' => 'required|email|max:255',
             'no_hp' => 'nullable|string|max:20',
             'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',
@@ -112,7 +112,7 @@ class AlumniController extends Controller
             'nim' => 'required|string|max:20|unique:alumni,nim',
             'nama' => 'required|string|max:100',
             'prodi_id' => 'required|exists:prodis,id',
-            'tahun_id' => 'required|exists:years,id',
+            'year_id' => 'required|exists:years,id',
             'email' => 'required|email|max:255',
             'no_hp' => 'nullable|string|max:20',
             'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',
@@ -158,7 +158,7 @@ class AlumniController extends Controller
             'nim' => 'required|string|max:20|unique:alumni,nim,' . $alumni->alumni_id . ',alumni_id',
             'nama' => 'required|string|max:100',
             'prodi_id' => 'required|exists:prodis,id',
-            'tahun_id' => 'required|exists:years,id',
+            'year_id' => 'required|exists:years,id',
             'email' => 'required|email|max:255',
             'no_hp' => 'nullable|string|max:20',
             'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',

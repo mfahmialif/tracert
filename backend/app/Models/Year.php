@@ -20,6 +20,6 @@ class Year extends Model
 
     public function alumni(): HasMany
     {
-        return $this->hasMany(Alumni::class, 'tahun_id');
+        return $this->hasMany(Alumni::class, 'year_id');
     }
 }

@@ -289,7 +289,7 @@ async function fetchAlumni() {
         sort_by: sortField,
         sort_order: sortOrder,
         prodi_id: selectedProdi.value,
-        tahun_id: selectedYear.value, // Changed from tahun_lulus
+        year_id: selectedYear.value, // Changed from tahun_lulus
         status: selectedStatus.value,
       },
     });

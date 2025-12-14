@@ -29,7 +29,7 @@ const router = useRouter();
 const form = ref({
   title: "",
   description: "",
-  tahun_id: "",
+  year_id: "",
   prodi_ids: [] as number[],
   start_date: "",
   end_date: "",
@@ -114,7 +114,7 @@ async function handleSubmit() {
           <div class="space-y-4">
             <div class="space-y-2">
               <Label>Tahun Periode</Label>
-              <Select v-model="form.tahun_id">
+              <Select v-model="form.year_id">
                 <SelectTrigger
                   ><SelectValue placeholder="Pilih Tahun"
                 /></SelectTrigger>

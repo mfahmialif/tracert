@@ -36,7 +36,7 @@ const form = reactive({
   nim: "",
   nama: "",
   prodi_id: "",
-  tahun_id: "",
+  year_id: "",
   email: "",
   no_hp: "",
   status: "",
@@ -76,7 +76,7 @@ async function fetchAlumni() {
     form.nim = data.nim;
     form.nama = data.nama;
     form.prodi_id = data.prodi_id?.toString() || "";
-    form.tahun_id = data.tahun_id?.toString() || "";
+    form.year_id = data.year_id?.toString() || "";
     form.email = data.email || "";
     form.no_hp = data.no_hp || "";
     form.status = data.status || "";
@@ -179,8 +179,8 @@ async function handleSubmit() {
             </div>
 
             <div class="grid gap-2">
-              <Label for="tahun_id">Tahun Lulus</Label>
-              <Select v-model="form.tahun_id">
+              <Label for="year_id">Tahun Lulus</Label>
+              <Select v-model="form.year_id">
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih Tahun Lulus" />
                 </SelectTrigger>

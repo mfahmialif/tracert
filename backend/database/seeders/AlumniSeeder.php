@@ -64,7 +64,7 @@ class AlumniSeeder extends Seeder
                     'nim' => $data['nim'],
                     'nama' => $data['nama'],
                     'prodi_id' => $prodi->id,
-                    'tahun_id' => $year->id,
+                    'year_id' => $year->id,
                     'email' => $data['email'],
                     'no_hp' => $data['no_hp'],
                     'status' => $data['status'],
