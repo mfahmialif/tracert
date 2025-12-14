@@ -5,13 +5,18 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: '/',
+      name: 'landing',
+      component: () => import('../views/LandingView.vue'),
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
       meta: { guest: true },
     },
     {
-      path: '/',
+      path: '/home',
       name: 'dashboard',
       component: () => import('../views/alumni/DashboardView.vue'),
       meta: { requiresAuth: true, role: 'alumni' },
@@ -153,6 +158,19 @@ router.beforeEach(async (to, _from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const isGuest = to.meta.guest
   const requiredRole = to.meta.role as string | undefined
+
+  if (to.path === '/check') {
+    if (authStore.isAuthenticated) {
+      if (authStore.isAdmin) {
+        next({ path: '/admin', replace: true })
+      } else {
+        next({ path: '/home', replace: true })
+      }
+    } else {
+      next({ path: '/login', replace: true })
+    }
+    return
+  }
 
   // Redirect unauthenticated users to login
   if (requiresAuth && !authStore.isAuthenticated) {

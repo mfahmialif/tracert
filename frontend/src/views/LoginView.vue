@@ -35,7 +35,7 @@ const showPassword = ref(false);
 async function handleLogin() {
   const success = await authStore.login(username.value, password.value);
   if (success) {
-    router.push(authStore.isAdmin ? "/admin" : "/");
+    router.push(authStore.isAdmin ? "/admin" : "/home");
   }
 }
 </script>
@@ -137,7 +137,7 @@ async function handleLogin() {
       </CardContent>
       <CardFooter>
         <p class="text-xs text-center text-muted-foreground w-full">
-          &copy; 2024 Tracer Study • Kampus
+          &copy; Tracer Study • UII Dalwa
         </p>
       </CardFooter>
     </Card>
