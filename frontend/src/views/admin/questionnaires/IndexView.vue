@@ -34,6 +34,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Search,
+  BarChart2,
 } from "lucide-vue-next";
 import {
   DropdownMenu,
@@ -347,6 +348,13 @@ async function handleDelete() {
           </div>
         </CardContent>
         <CardFooter class="flex gap-2">
+          <Button
+            variant="secondary"
+            class="flex-1"
+            @click="router.push(`/admin/questionnaires/${q.id}/results`)"
+          >
+            <BarChart2 class="mr-2 h-4 w-4" /> Hasil
+          </Button>
           <Button
             variant="outline"
             class="flex-1"

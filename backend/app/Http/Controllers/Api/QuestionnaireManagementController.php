@@ -6,6 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Questionnaire;
 use App\Models\Question;
 use Illuminate\Http\Request;
+use App\Exports\QuestionnaireResultExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+use Illuminate\Support\Str;
 
 class QuestionnaireManagementController extends Controller
 {
@@ -133,5 +138,84 @@ class QuestionnaireManagementController extends Controller
         $questionnaire->delete();
 
         return response()->json(['message' => 'Kuesioner berhasil dihapus']);
+    }
+
+    public function results($id)
+    {
+        $data = $this->getResultsData($id);
+        return response()->json($data);
+    }
+
+    public function exportExcel($id)
+    {
+        $questionnaire = Questionnaire::findOrFail($id);
+        $filename = 'hasil_kuesioner_' . Str::slug($questionnaire->title) . '_' . date('Y-m-d') . '.xlsx';
+        return Excel::download(new QuestionnaireResultExport($id), $filename);
+    }
+
+    public function exportPdf($id)
+    {
+        $data = $this->getResultsData($id);
+        $pdf = Pdf::loadView('exports.questionnaire_results', $data);
+        $filename = 'hasil_kuesioner_' . Str::slug($data['title']) . '_' . date('Y-m-d') . '.pdf';
+        return $pdf->download($filename);
+    }
+
+    private function getResultsData($id)
+    {
+        $questionnaire = Questionnaire::with(['questions' => function ($q) {
+            $q->orderBy('section')->orderBy('order');
+        }])->findOrFail($id);
+
+        $results = $questionnaire->questions->map(function ($question) {
+            $answers = \App\Models\Answer::where('question_id', $question->id)->get();
+            $count = $answers->count();
+
+            $data = [
+                'id' => $question->id,
+                'text' => $question->question_text,
+                'type' => $question->type,
+                'count' => $count,
+                'options' => $question->options,
+            ];
+
+            if (in_array($question->type, ['text', 'long_text', 'date'])) {
+                $data['answers'] = $answers->sortByDesc('created_at')->take(20)->map(function ($a) {
+                    return $a->answer_value;
+                })->values();
+            } else {
+                // Radio, Checkbox, Select, Scale
+                $stats = [];
+                // Initialize stats with 0 for all options
+                if (is_array($question->options)) {
+                    foreach ($question->options as $opt) {
+                        $stats[$opt] = 0;
+                    }
+                }
+
+                foreach ($answers as $answer) {
+                    $val = $answer->answer_value;
+                    $decoded = json_decode($val, true);
+
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        foreach ($decoded as $v) {
+                            $stats[$v] = ($stats[$v] ?? 0) + 1;
+                        }
+                    } else {
+                        // Clean up quotes if present (sometimes happens with json encoding single strings)
+                        $cleanVal = trim($val, '"');
+                        $stats[$cleanVal] = ($stats[$cleanVal] ?? 0) + 1;
+                    }
+                }
+                $data['stats'] = $stats;
+            }
+
+            return $data;
+        });
+
+        return [
+            'title' => $questionnaire->title,
+            'results' => $results
+        ];
     }
 }

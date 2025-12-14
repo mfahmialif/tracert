@@ -59,6 +59,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/questionnaires/{id}', [QuestionnaireManagementController::class, 'show']);
         Route::put('/questionnaires/{id}', [QuestionnaireManagementController::class, 'update']);
         Route::delete('/questionnaires/{id}', [QuestionnaireManagementController::class, 'destroy']);
+        Route::get('/questionnaires/{id}/results', [QuestionnaireManagementController::class, 'results']);
+        Route::get('/questionnaires/{id}/export/excel', [QuestionnaireManagementController::class, 'exportExcel']);
+        Route::get('/questionnaires/{id}/export/pdf', [QuestionnaireManagementController::class, 'exportPdf']);
 
         // Question Management
         Route::post('/questionnaires/{questionnaireId}/questions', [QuestionManagementController::class, 'store']);

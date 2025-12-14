@@ -65,6 +65,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'admin' },
     },
     {
+      path: '/admin/questionnaires/:id/results',
+      name: 'admin-questionnaires-results',
+      component: () => import('../views/admin/questionnaires/ResultsView.vue'),
+      meta: { requiresAuth: true, role: 'admin' },
+    },
+    {
       path: '/admin/export',
       name: 'admin-export',
       component: () => import('../views/admin/ExportView.vue'),
