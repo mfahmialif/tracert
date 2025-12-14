@@ -33,6 +33,7 @@ import {
   BookOpen,
   CalendarDays,
   ChevronDown,
+  User,
 } from "lucide-vue-next";
 
 const router = useRouter();
@@ -223,6 +224,11 @@ async function handleLogout() {
                   </p>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem @click="router.push('/admin/profile')">
+                <User class="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 @click="handleLogout"

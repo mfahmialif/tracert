@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\QuestionnaireTypeController;
 use App\Http\Controllers\Api\QuestionnaireManagementController;
 use App\Http\Controllers\Api\QuestionManagementController;
 use App\Http\Controllers\Api\FacultyController;
+use App\Http\Controllers\Api\ProfileController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -21,6 +22,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Profile
+    Route::put('/profile/password', [ProfileController::class, 'changePassword']);
 
     // Public data
     Route::get('/prodis', [ProdiController::class, 'index']);
