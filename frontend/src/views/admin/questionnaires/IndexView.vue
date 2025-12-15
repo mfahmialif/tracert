@@ -346,6 +346,15 @@ async function handleDelete() {
             </Badge>
           </div>
           <div class="flex justify-between py-1">
+            <span>Publik:</span>
+            <Badge
+              :variant="q.is_public ? 'destructive' : 'secondary'"
+              class="font-normal"
+            >
+              {{ q.is_public ? "Publik" : "Tidak Publik" }}
+            </Badge>
+          </div>
+          <div class="flex justify-between py-1">
             <span>Pertanyaan:</span>
             <span class="font-medium">{{ q.questions_count || 0 }}</span>
           </div>

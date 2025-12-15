@@ -14,6 +14,7 @@ class Questionnaire extends Model
         'description',
         'is_mandatory',
         'is_active',
+        'is_public',
         'start_date',
         'end_date',
     ];
@@ -21,6 +22,7 @@ class Questionnaire extends Model
     protected $casts = [
         'is_mandatory' => 'boolean',
         'is_active' => 'boolean',
+        'is_public' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
     ];

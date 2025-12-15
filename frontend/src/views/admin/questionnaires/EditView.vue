@@ -53,6 +53,7 @@ const detailsForm = ref({
   prodi_ids: [] as number[],
   is_active: true,
   is_mandatory: false,
+  is_public: false,
   start_date: "",
   end_date: "",
 });
@@ -105,6 +106,7 @@ function openEditDetails() {
     prodi_ids: questionnaire.value.prodis?.map((p: any) => p.id) || [],
     is_active: questionnaire.value.is_active,
     is_mandatory: questionnaire.value.is_mandatory,
+    is_public: questionnaire.value.is_public || false,
     start_date: questionnaire.value.start_date,
     end_date: questionnaire.value.end_date,
   };
@@ -397,6 +399,22 @@ async function handleReorder() {
                   class="h-4 w-4"
                 />
                 <Label>Aktif</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  v-model="detailsForm.is_mandatory"
+                  class="h-4 w-4"
+                />
+                <Label>Wajib Diisi</Label>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  v-model="detailsForm.is_public"
+                  class="h-4 w-4"
+                />
+                <Label>Publikasi Publik (Bisa diakses tanpa login)</Label>
               </div>
             </div>
             <DialogFooter>

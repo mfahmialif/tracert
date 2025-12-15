@@ -11,6 +11,9 @@ class Response extends Model
     protected $fillable = [
         'questionnaire_id',
         'alumni_id',
+        'respondent_name',
+        'respondent_email',
+        'respondent_phone',
         'submitted_at',
     ];
 

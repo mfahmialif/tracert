@@ -35,6 +35,7 @@ const form = ref({
   end_date: "",
   is_active: true,
   is_mandatory: false,
+  is_public: false,
 });
 const loading = ref(false);
 const years = ref<any[]>([]);
@@ -180,6 +181,16 @@ async function handleSubmit() {
                 @update:checked="(v: boolean) => (form.is_mandatory = v)"
               />
               <Label for="mandatory">Wajib Diisi</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <Checkbox
+                id="public"
+                :checked="form.is_public"
+                @update:checked="(v: boolean) => (form.is_public = v)"
+              />
+              <Label for="public"
+                >Publikasi Publik (Bisa diakses tanpa login)</Label
+              >
             </div>
           </div>
         </CardContent>

@@ -13,6 +13,15 @@ use App\Http\Controllers\Api\QuestionnaireManagementController;
 use App\Http\Controllers\Api\QuestionManagementController;
 use App\Http\Controllers\Api\FacultyController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\PublicQuestionnaireController;
+
+
+// Public Questionnaires (no auth required)
+Route::prefix('public')->group(function () {
+    Route::get('/questionnaires', [PublicQuestionnaireController::class, 'index']);
+    Route::get('/questionnaires/{id}', [PublicQuestionnaireController::class, 'show']);
+    Route::post('/questionnaires/{id}/submit', [PublicQuestionnaireController::class, 'submit']);
+});
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);

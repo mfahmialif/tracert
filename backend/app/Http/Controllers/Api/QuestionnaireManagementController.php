@@ -67,6 +67,7 @@ class QuestionnaireManagementController extends Controller
             'description' => 'nullable|string',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
@@ -77,6 +78,7 @@ class QuestionnaireManagementController extends Controller
             'description' => $validated['description'],
             'is_mandatory' => $validated['is_mandatory'] ?? false,
             'is_active' => $validated['is_active'] ?? true,
+            'is_public' => $validated['is_public'] ?? false,
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
         ]);
@@ -135,6 +137,7 @@ class QuestionnaireManagementController extends Controller
             'description' => 'nullable|string',
             'is_mandatory' => 'boolean',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
@@ -145,6 +148,7 @@ class QuestionnaireManagementController extends Controller
             'description' => $validated['description'],
             'is_mandatory' => $validated['is_mandatory'] ?? false,
             'is_active' => $validated['is_active'] ?? true,
+            'is_public' => $validated['is_public'] ?? false,
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
         ]);
@@ -192,16 +196,33 @@ class QuestionnaireManagementController extends Controller
             ->with(['alumni.prodi', 'alumni.year'])
             ->get()
             ->map(function ($response) {
-                $alumni = $response->alumni;
-                return [
-                    'id' => $alumni->id,
-                    'nim' => $alumni->nim,
-                    'nama' => $alumni->nama,
-                    'prodi' => $alumni->prodi->nama ?? '-',
-                    'tahun_lulus' => $alumni->year->name ?? '-',
-                    'submitted_at' => $response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : $response->created_at->format('Y-m-d H:i:s'),
-                    'status' => $response->submitted_at ? 'complete' : 'draft',
-                ];
+                // Check if this is a public response (alumni_id is null)
+                if ($response->alumni_id === null) {
+                    // Public respondent
+                    return [
+                        'id' => $response->id,
+                        'nim' => '-',
+                        'nama' => $response->respondent_name ?? 'Public User',
+                        'prodi' => '-',
+                        'tahun_lulus' => '-',
+                        'submitted_at' => $response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : $response->created_at->format('Y-m-d H:i:s'),
+                        'status' => $response->submitted_at ? 'complete' : 'draft',
+                        'is_public' => true,
+                    ];
+                } else {
+                    // Alumni respondent
+                    $alumni = $response->alumni;
+                    return [
+                        'id' => $alumni->alumni_id,
+                        'nim' => $alumni->nim,
+                        'nama' => $alumni->nama,
+                        'prodi' => $alumni->prodi->nama ?? '-',
+                        'tahun_lulus' => $alumni->year->name ?? '-',
+                        'submitted_at' => $response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : $response->created_at->format('Y-m-d H:i:s'),
+                        'status' => $response->submitted_at ? 'complete' : 'draft',
+                        'is_public' => false,
+                    ];
+                }
             })
             ->sortByDesc('submitted_at')
             ->values();
@@ -223,7 +244,7 @@ class QuestionnaireManagementController extends Controller
             ->with(['response.alumni.prodi', 'response.alumni.year'])
             ->get()
             ->map(function ($answer) {
-                $alumni = $answer->response->alumni;
+                $response = $answer->response;
                 $answerValue = $answer->answer_value;
 
                 // Try to decode JSON for checkbox/multiple answers
@@ -234,15 +255,33 @@ class QuestionnaireManagementController extends Controller
                     $answerValue = trim($answerValue, '"');
                 }
 
-                return [
-                    'id' => $alumni->alumni_id,
-                    'nim' => $alumni->nim,
-                    'nama' => $alumni->nama,
-                    'prodi' => $alumni->prodi->name ?? '-',
-                    'tahun_lulus' => $alumni->year->name ?? '-',
-                    'answer' => $answerValue,
-                    'submitted_at' => $answer->created_at->format('Y-m-d H:i:s'),
-                ];
+                // Check if this is a public response (alumni_id is null)
+                if ($response->alumni_id === null) {
+                    // Public respondent
+                    return [
+                        'id' => $response->id,
+                        'nim' => '-',
+                        'nama' => $response->respondent_name ?? 'Public User',
+                        'prodi' => '-',
+                        'tahun_lulus' => '-',
+                        'answer' => $answerValue,
+                        'submitted_at' => $answer->created_at->format('Y-m-d H:i:s'),
+                        'is_public' => true,
+                    ];
+                } else {
+                    // Alumni respondent
+                    $alumni = $response->alumni;
+                    return [
+                        'id' => $alumni->alumni_id,
+                        'nim' => $alumni->nim,
+                        'nama' => $alumni->nama,
+                        'prodi' => $alumni->prodi->name ?? '-',
+                        'tahun_lulus' => $alumni->year->name ?? '-',
+                        'answer' => $answerValue,
+                        'submitted_at' => $answer->created_at->format('Y-m-d H:i:s'),
+                        'is_public' => false,
+                    ];
+                }
             })
             ->sortByDesc('submitted_at')
             ->values();

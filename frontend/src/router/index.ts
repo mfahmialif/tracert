@@ -16,6 +16,16 @@ const router = createRouter({
       meta: { guest: true },
     },
     {
+      path: '/public/questionnaires',
+      name: 'public-questionnaires',
+      component: () => import('../views/public/PublicQuestionnairesView.vue'),
+    },
+    {
+      path: '/public/questionnaires/:id',
+      name: 'public-questionnaire-form',
+      component: () => import('../views/public/PublicQuestionnaireFormView.vue'),
+    },
+    {
       path: '/home',
       name: 'dashboard',
       component: () => import('../views/alumni/DashboardView.vue'),
