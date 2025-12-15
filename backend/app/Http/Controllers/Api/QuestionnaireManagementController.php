@@ -57,8 +57,6 @@ class QuestionnaireManagementController extends Controller
 
     public function store(Request $request)
     {
-        Log::info('Questionnaire Store Payload:', $request->all());
-
         $validated = $request->validate([
             'year_id' => 'required|exists:years,id',
             'prodi_ids' => 'present|array',
