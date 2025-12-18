@@ -16,7 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
-        $middleware->statefulApi();
+        // Enable CORS globally for all requests (including error responses)
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
+
+        // Disabled stateful API to make endpoints stateless (no CSRF required)
+        // $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

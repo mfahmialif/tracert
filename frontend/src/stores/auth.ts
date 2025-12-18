@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '../services/api'
+import api, { setAuthToken, removeAuthToken, getAuthToken } from '../services/api'
 
 interface User {
   id: number
@@ -37,7 +37,12 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const response = await api.post('/login', { username, password })
+      console.log('response login: ', response)
       user.value = response.data.user
+      // Store the token
+      if (response.data.token) {
+        setAuthToken(response.data.token)
+      }
       return true
     } catch (e: any) {
       error.value = e.response?.data?.message || 'Login gagal'
@@ -52,6 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
       await api.post('/logout')
     } finally {
       user.value = null
+      removeAuthToken()
     }
   }
 

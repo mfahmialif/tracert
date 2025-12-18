@@ -26,6 +26,7 @@ Route::prefix('public')->group(function () {
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::get('/dashboardd', [DashboardController::class, 'index']);
 // Protected routes
 Route::middleware(['auth:sanctum'])->group(function () {
     // Auth
