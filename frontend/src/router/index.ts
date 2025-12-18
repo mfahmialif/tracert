@@ -170,10 +170,14 @@ router.beforeEach(async (to, _from, next) => {
   // Only fetch user once on initial load
   if (!authChecked) {
     authChecked = true
-    try {
-      await authStore.fetchUser()
-    } catch (error) {
-      // User is not authenticated
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      try {
+        await authStore.fetchUser()
+      } catch (error) {
+        // User is not authenticated - clear invalid token
+        localStorage.removeItem('auth_token')
+      }
     }
   }
 

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -26,22 +25,22 @@ class AuthController extends Controller
             ]);
         }
 
-        Auth::login($user);
+        // Create personal access token
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         $user->load(['role', 'alumni.prodi']);
 
         return response()->json([
             'message' => 'Login berhasil',
             'user' => $this->formatUser($user),
+            'token' => $token,
         ]);
     }
 
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Revoke current token
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout berhasil']);
     }

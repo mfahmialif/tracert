@@ -38,6 +38,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.post('/login', { username, password })
       user.value = response.data.user
+      localStorage.setItem('auth_token', response.data.token)
       return true
     } catch (e: any) {
       error.value = e.response?.data?.message || 'Login gagal'
@@ -52,6 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
       await api.post('/logout')
     } finally {
       user.value = null
+      localStorage.removeItem('auth_token')
     }
   }
 
