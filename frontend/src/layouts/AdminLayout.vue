@@ -24,7 +24,6 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  Download,
   LogOut,
   Menu,
   GraduationCap,
