@@ -141,18 +141,21 @@ async function handleSubmit() {
                   :key="prodi.id"
                   class="flex items-center space-x-2"
                 >
-                  <Checkbox
+                  <input
+                    type="checkbox"
                     :id="'prodi-' + prodi.id"
                     :checked="form.prodi_ids.includes(prodi.id)"
-                    @update:checked="
-                      (checked: boolean) => {
-                        if (checked) form.prodi_ids.push(prodi.id);
+                    @change="
+                      (e: Event) => {
+                        if ((e.target as HTMLInputElement).checked)
+                          form.prodi_ids.push(prodi.id);
                         else
                           form.prodi_ids = form.prodi_ids.filter(
                             (id) => id !== prodi.id
                           );
                       }
                     "
+                    class="h-4 w-4"
                   />
                   <Label :for="'prodi-' + prodi.id" class="cursor-pointer">
                     {{ prodi.name }} ({{ prodi.code }})
@@ -167,26 +170,29 @@ async function handleSubmit() {
 
           <div class="flex flex-col gap-4">
             <div class="flex items-center space-x-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 id="active"
-                :checked="form.is_active"
-                @update:checked="(v: boolean) => (form.is_active = v)"
+                v-model="form.is_active"
+                class="h-4 w-4"
               />
               <Label for="active">Aktifkan Kuesioner</Label>
             </div>
             <div class="flex items-center space-x-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 id="mandatory"
-                :checked="form.is_mandatory"
-                @update:checked="(v: boolean) => (form.is_mandatory = v)"
+                v-model="form.is_mandatory"
+                class="h-4 w-4"
               />
               <Label for="mandatory">Wajib Diisi</Label>
             </div>
             <div class="flex items-center space-x-2">
-              <Checkbox
+              <input
+                type="checkbox"
                 id="public"
-                :checked="form.is_public"
-                @update:checked="(v: boolean) => (form.is_public = v)"
+                v-model="form.is_public"
+                class="h-4 w-4"
               />
               <Label for="public"
                 >Publikasi Publik (Bisa diakses tanpa login)</Label

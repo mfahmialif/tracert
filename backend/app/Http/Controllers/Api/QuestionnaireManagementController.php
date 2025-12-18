@@ -87,7 +87,8 @@ class QuestionnaireManagementController extends Controller
 
         return response()->json([
             'data' => $questionnaire->load(['year', 'prodis']),
-            'message' => 'Kuesioner berhasil dibuat'
+            'message' => 'Kuesioner berhasil dibuat',
+            'req' => $request->all()
         ], 201);
     }
 
@@ -129,7 +130,7 @@ class QuestionnaireManagementController extends Controller
 
         $validated = $request->validate([
             'year_id' => 'required|exists:years,id',
-            'prodi_ids' => 'required|array',
+            'prodi_ids' => 'nullable|array',
             'prodi_ids.*' => 'exists:prodis,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
