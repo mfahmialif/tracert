@@ -379,8 +379,69 @@ async function handleImport() {
   }
 }
 
-function downloadTemplate() {
-  window.location.href = "/templates/alumni_import_template.xlsx";
+async function downloadTemplate() {
+  try {
+    const response = await api.get("/admin/alumni/template", {
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "template_import_alumni.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Failed to download template", error);
+    toast.error("Gagal mengunduh template");
+  }
+}
+
+const exporting = ref(false);
+
+async function handleExport() {
+  exporting.value = true;
+  try {
+    const params: any = {};
+
+    // Apply current filters to export
+    if (search.value) params.search = search.value;
+    if (selectedProdi.value && selectedProdi.value !== "all")
+      params.prodi_id = selectedProdi.value;
+    if (selectedYear.value && selectedYear.value !== "all")
+      params.year_id = selectedYear.value;
+    if (selectedStatus.value && selectedStatus.value !== "all")
+      params.status = selectedStatus.value;
+
+    // Apply current sorting
+    const sortField = sorting.value[0]?.id || "created_at";
+    const sortOrder = sorting.value[0]?.desc ? "desc" : "asc";
+    params.sort_by = sortField;
+    params.sort_order = sortOrder;
+
+    const response = await api.get("/admin/alumni/export", {
+      params,
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    const filename = `alumni_${new Date().getTime()}.xlsx`;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    toast.success("Data alumni berhasil diekspor");
+  } catch (error) {
+    console.error("Failed to export alumni", error);
+    toast.error("Gagal mengekspor data alumni");
+  } finally {
+    exporting.value = false;
+  }
 }
 </script>
 
@@ -398,6 +459,14 @@ function downloadTemplate() {
       <div class="flex items-center space-x-2">
         <Button @click="handleCreate">
           <Plus class="mr-2 h-4 w-4" /> Tambah Alumni
+        </Button>
+        <Button variant="outline" @click="handleExport" :disabled="exporting">
+          <span
+            v-if="exporting"
+            class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          ></span>
+          <DownloadIcon v-else class="mr-2 h-4 w-4" />
+          {{ exporting ? "Exporting..." : "Export Data" }}
         </Button>
         <Dialog v-model:open="showImportModal">
           <DialogTrigger as-child>

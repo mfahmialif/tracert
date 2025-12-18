@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Alumni;
 use App\Models\Prodi;
+use App\Models\Year;
 use App\Models\User;
 use App\Models\Role;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -22,9 +23,17 @@ class AlumniImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
 
     public function model(array $row)
     {
-        $prodi = Prodi::where('kode_prodi', $row['kode_prodi'])->first();
+        // Find prodi by kode_prodi
+        $prodi = Prodi::where('code', $row['kode_prodi'])->first();
 
         if (!$prodi) {
+            return null;
+        }
+
+        // Find year by tahun_kode (matches years.code)
+        $year = Year::where('code', $row['tahun_kode'])->first();
+
+        if (!$year) {
             return null;
         }
 
@@ -34,8 +43,8 @@ class AlumniImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
             // Update existing
             $existingAlumni->update([
                 'nama' => $row['nama'],
-                'prodi_id' => $prodi->prodi_id,
-                'tahun_lulus' => $row['tahun_lulus'],
+                'prodi_id' => $prodi->id,  // Fixed: use prodi->id instead of prodi->prodi_id
+                'year_id' => $year->id,    // Added: year_id mapping
                 'email' => $row['email'] ?? null,
                 'no_hp' => $row['no_hp'] ?? null,
             ]);
@@ -49,11 +58,11 @@ class AlumniImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
         $alumni = Alumni::create([
             'nim' => $row['nim'],
             'nama' => $row['nama'],
-            'prodi_id' => $prodi->prodi_id,
-            'tahun_lulus' => $row['tahun_lulus'],
+            'prodi_id' => $prodi->id,  // Fixed: use prodi->id instead of prodi->prodi_id
+            'year_id' => $year->id,    // Added: year_id mapping
             'email' => $row['email'] ?? null,
             'no_hp' => $row['no_hp'] ?? null,
-            'status' => 'active',
+            'status' => 'Belum Bekerja',  // Default status
         ]);
 
         // Create user account for alumni
@@ -70,10 +79,10 @@ class AlumniImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnEr
     public function rules(): array
     {
         return [
-            'nim' => 'required|string',
+            'nim' => 'required',
             'nama' => 'required|string',
-            'kode_prodi' => 'required|exists:prodis,kode_prodi',
-            'tahun_lulus' => 'required|integer|min:1900|max:2100',
+            'kode_prodi' => 'required|exists:prodis,code',
+            'tahun_kode' => 'required|exists:years,code',  // Updated: use tahun_kode instead of tahun_lulus
         ];
     }
 

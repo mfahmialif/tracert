@@ -52,11 +52,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/alumni', [AlumniController::class, 'index']);
         Route::post('/alumni', [AlumniController::class, 'store']);
+        // Specific routes must come before wildcard routes
+        Route::get('/alumni/template', [AlumniController::class, 'downloadTemplate']);
+        Route::get('/alumni/export', [AlumniController::class, 'export']);
+        Route::post('/alumni/import', [AlumniController::class, 'import']);
+        // Wildcard routes
         Route::get('/alumni/{id}', [AlumniController::class, 'show']);
         Route::put('/alumni/{id}', [AlumniController::class, 'update']);
         Route::delete('/alumni/{id}', [AlumniController::class, 'destroy']);
-        Route::post('/alumni/import', [AlumniController::class, 'import']);
-        Route::get('/alumni/template', [AlumniController::class, 'downloadTemplate']);
 
 
         // Questionnaire Type Management

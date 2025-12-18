@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Imports\AlumniImport;
 use App\Exports\AlumniTemplateExport;
+use App\Exports\AlumniExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
@@ -207,5 +208,52 @@ class AlumniController extends Controller
     public function downloadTemplate()
     {
         return Excel::download(new AlumniTemplateExport(), 'template_import_alumni.xlsx');
+    }
+
+    public function export(Request $request)
+    {
+        $query = Alumni::with(['prodi', 'year']);
+
+        // Apply same filters as index method
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('nim', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by Prodi
+        if ($request->filled('prodi_id') && $request->prodi_id !== 'all') {
+            $query->where('prodi_id', $request->prodi_id);
+        }
+
+        // Filter by Year
+        if ($request->filled('year_id') && $request->year_id !== 'all') {
+            $query->where('year_id', $request->year_id);
+        }
+
+        // Filter by Status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Sorting
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+
+        if ($sortBy === 'year.name') {
+            $query->join('years', 'alumni.year_id', '=', 'years.id')
+                ->orderBy('years.name', $sortOrder)
+                ->select('alumni.*');
+        } elseif (in_array($sortBy, ['nim', 'nama', 'status', 'created_at'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $filename = 'alumni_' . date('YmdHis') . '.xlsx';
+        return Excel::download(new AlumniExport($query), $filename);
     }
 }

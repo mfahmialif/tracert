@@ -12,14 +12,14 @@ class AlumniTemplateExport implements FromArray, WithHeadings, WithStyles
     public function array(): array
     {
         return [
-            ['2020001', 'Ahmad Fadli', 'TI', 2024, 'ahmad@email.com', '081234567890'],
-            ['2020002', 'Siti Nurhaliza', 'SI', 2024, 'siti@email.com', '081234567891'],
+            ['2020001', 'Ahmad Fadli', 'TI', '2024', 'ahmad@email.com', '081234567890'],
+            ['2020002', 'Siti Nurhaliza', 'SI', '2023', 'siti@email.com', '081234567891'],
         ];
     }
 
     public function headings(): array
     {
-        return ['nim', 'nama', 'kode_prodi', 'tahun_lulus', 'email', 'no_hp'];
+        return ['nim', 'nama', 'kode_prodi', 'tahun_kode', 'email', 'no_hp'];
     }
 
     public function styles(Worksheet $sheet): array
