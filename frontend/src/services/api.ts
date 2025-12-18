@@ -5,52 +5,39 @@ const baseURL = import.meta.env.VITE_API_URL || 'https://tracerapp.uiidalwa.web.
 
 const api = axios.create({
   baseURL,
+  withCredentials: true,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
 })
 
-// Token storage key
-const TOKEN_KEY = 'auth_token'
+let csrfInitialized = false
 
-// Token management functions
-export const setAuthToken = (token: string) => {
-  localStorage.setItem(TOKEN_KEY, token)
-  console.log('store token: ', token)
-}
-
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
-export const removeAuthToken = () => {
-  localStorage.removeItem(TOKEN_KEY)
-}
-
-// Request interceptor - attach bearer token if available
-api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+// Intercept requests to add CSRF token
+api.interceptors.request.use(async (config) => {
+  // Get CSRF cookie if not already set (only once)
+  if (!csrfInitialized) {
+    csrfInitialized = true
+    try {
+      // Determine sanctum URL based on baseURL
+      const sanctumUrl = baseURL.includes('http')
+        ? baseURL.replace('/api', '/sanctum/csrf-cookie')
+        : '/sanctum/csrf-cookie'
+      
+      await axios.get(sanctumUrl, { withCredentials: true })
+    } catch {
+      // Ignore CSRF errors
     }
-    return config
-  },
-  (error) => {
-    return Promise.reject(error)
   }
-)
+  return config
+})
 
-// Response interceptor - handle 401 errors
+// Handle errors - don't auto-redirect to avoid loops
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token is invalid or expired
-      removeAuthToken()
-      // Redirect to login will be handled by router guards
-    }
+    // Don't auto-redirect, let the router handle it
     return Promise.reject(error)
   }
 )

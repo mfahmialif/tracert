@@ -26,22 +26,22 @@ class AuthController extends Controller
             ]);
         }
 
-        // Create token for the user
-        $token = $user->createToken('auth-token')->plainTextToken;
+        Auth::login($user);
 
         $user->load(['role', 'alumni.prodi']);
 
         return response()->json([
             'message' => 'Login berhasil',
             'user' => $this->formatUser($user),
-            'token' => $token,
         ]);
     }
 
     public function logout(Request $request)
     {
-        // Delete the current access token
-        $request->user()->currentAccessToken()->delete();
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json(['message' => 'Logout berhasil']);
     }

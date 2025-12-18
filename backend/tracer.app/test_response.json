@@ -1,7 +1,0 @@
-{
-    "message": "Allowed memory size of 536870912 bytes exhausted (tried to allocate 65015808 bytes)",
-    "exception": "Symfony\\Component\\ErrorHandler\\Error\\FatalError",
-    "file": "C:\\laragon\\www\\tracert\\backend\\tracer.app\\vendor\\monolog\\monolog\\src\\Monolog\\Utils.php",
-    "line": 86,
-    "trace": []
-}
