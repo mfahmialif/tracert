@@ -135,6 +135,12 @@ const stats = [
 
             <!-- Desktop Menu -->
             <div class="hidden md:flex items-center space-x-6">
+              <router-link
+                to="/public/questionnaires"
+                class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                Questionnaires
+              </router-link>
               <a
                 href="#features"
                 class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -185,6 +191,12 @@ const stats = [
             v-if="mobileMenuOpen"
             class="md:hidden mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3"
           >
+            <router-link
+              to="/public/questionnaires"
+              class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              Questionnaires
+            </router-link>
             <a
               href="#features"
               class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"

@@ -308,12 +308,16 @@ const firstName = computed(
 
       <!-- Questionnaires -->
       <div class="space-y-4">
-        <div class="flex items-center justify-between">
+        <div
+          class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
+        >
           <h2 class="text-xl font-semibold tracking-tight">
             Kuesioner Tersedia
           </h2>
-          <div class="flex items-center gap-2">
-            <div class="relative w-full max-w-sm items-center">
+          <div
+            class="flex flex-col gap-2 w-full md:w-auto md:flex-row md:items-center"
+          >
+            <div class="relative w-full md:max-w-sm items-center">
               <Input
                 type="text"
                 placeholder="Cari kuesioner..."
@@ -342,19 +346,21 @@ const firstName = computed(
                 </span>
               </span>
             </div>
-            <Select v-model="sortBy">
-              <SelectTrigger class="w-[180px]">
-                <SelectValue placeholder="Urutkan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Terbaru</SelectItem>
-                <SelectItem value="title">Nama</SelectItem>
-                <SelectItem value="year">Tahun</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon" @click="toggleSortOrder">
-              <ArrowUpDown class="h-4 w-4" />
-            </Button>
+            <div class="flex gap-2 w-full md:w-auto">
+              <Select v-model="sortBy">
+                <SelectTrigger class="flex-1 md:w-[180px]">
+                  <SelectValue placeholder="Urutkan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Terbaru</SelectItem>
+                  <SelectItem value="title">Nama</SelectItem>
+                  <SelectItem value="year">Tahun</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="icon" @click="toggleSortOrder">
+                <ArrowUpDown class="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
