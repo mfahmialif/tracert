@@ -456,23 +456,32 @@ async function handleExport() {
           Kelola data alumni dan status kelulusan
         </p>
       </div>
-      <div class="flex items-center space-x-2">
-        <Button @click="handleCreate">
-          <Plus class="mr-2 h-4 w-4" /> Tambah Alumni
+      <div class="flex flex-wrap items-center gap-2">
+        <Button @click="handleCreate" class="w-full sm:w-auto">
+          <Plus class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">Tambah Alumni</span>
         </Button>
-        <Button variant="outline" @click="handleExport" :disabled="exporting">
+        <Button
+          variant="outline"
+          @click="handleExport"
+          :disabled="exporting"
+          class="flex-1 sm:flex-none"
+        >
           <span
             v-if="exporting"
-            class="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+            class="h-4 w-4 sm:mr-2 animate-spin rounded-full border-2 border-current border-t-transparent"
           ></span>
-          <DownloadIcon v-else class="mr-2 h-4 w-4" />
-          {{ exporting ? "Exporting..." : "Export Data" }}
+          <DownloadIcon v-else class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">{{
+            exporting ? "Exporting..." : "Export"
+          }}</span>
         </Button>
         <Dialog v-model:open="showImportModal">
           <DialogTrigger as-child>
-            <Button variant="outline"
-              ><Upload class="mr-2 h-4 w-4" /> Import Data</Button
-            >
+            <Button variant="outline" class="flex-1 sm:flex-none">
+              <Upload class="h-4 w-4 sm:mr-2" />
+              <span class="hidden sm:inline">Import</span>
+            </Button>
           </DialogTrigger>
           <DialogContent class="sm:max-w-[425px]">
             <DialogHeader>
