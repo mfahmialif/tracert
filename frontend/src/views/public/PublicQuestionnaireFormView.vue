@@ -266,7 +266,7 @@ async function handleSubmit() {
                   :id="`q${question.id}-${oIdx}`"
                   :checked="(answers[question.id] || []).includes(option)"
                   @update:checked="
-                    (checked) => {
+                    (checked: boolean) => {
                       if (!answers[question.id]) answers[question.id] = [];
                       if (checked) {
                         answers[question.id].push(option);

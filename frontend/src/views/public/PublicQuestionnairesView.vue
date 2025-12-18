@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import api from "@/services/api";
 import {
   Card,
-  CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, FileText, ArrowRight } from "lucide-vue-next";
+import { FileText, ArrowRight } from "lucide-vue-next";
 
 const router = useRouter();
 const loading = ref(true);

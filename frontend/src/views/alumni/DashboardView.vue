@@ -39,7 +39,6 @@ import {
   FileText,
   CheckCircle,
   Clock,
-  User,
 } from "lucide-vue-next";
 
 import {
@@ -57,7 +56,6 @@ const qStore = useQuestionnaireStore();
 const { isDark, toggleTheme } = useTheme();
 
 import { Input } from "@/components/ui/input";
-import { useDebounceFn } from "@vueuse/core"; // Try using vueuse if available or implement manual debounce
 
 // Manual debounce if vueuse not available (safest bet without checking package.json)
 function debounce<T extends (...args: any[]) => any>(fn: T, delay: number) {

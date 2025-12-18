@@ -24,7 +24,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   ChevronLeft,
   Plus,
@@ -377,7 +376,8 @@ async function handleReorder() {
                       :checked="detailsForm.prodi_ids.includes(prodi.id)"
                       @change="
                         (e) => {
-                          if (e.target.checked)
+                          const target = e.target as HTMLInputElement;
+                          if (target?.checked)
                             detailsForm.prodi_ids.push(prodi.id);
                           else
                             detailsForm.prodi_ids =

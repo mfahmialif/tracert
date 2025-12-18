@@ -35,8 +35,6 @@ import {
   getCoreRowModel,
   createColumnHelper,
   FlexRender,
-  getPaginationRowModel,
-  getFilteredRowModel,
 } from "@tanstack/vue-table";
 import { Card, CardContent } from "@/components/ui/card";
 import {

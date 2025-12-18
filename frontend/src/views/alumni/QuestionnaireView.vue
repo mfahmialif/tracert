@@ -32,7 +32,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, CheckCircle, Info } from "lucide-vue-next";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+  Info,
+  Check,
+} from "lucide-vue-next";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const route = useRoute();
