@@ -21,12 +21,28 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // "/api": {
+      //   target: "http://localhost:8000",
+      //   changeOrigin: true,
+      // },
+      // "/sanctum": {
+      //   target: "http://localhost:8000",
+      //   changeOrigin: true,
+      // },
+      // "/api": {
+      //   target: "http://localhost/tracert/backend/public_html",
+      //   changeOrigin: true,
+      // },
+      // "/sanctum": {
+      //   target: "http://localhost/tracert/backend/public_html",
+      //   changeOrigin: true,
+      // },
       "/api": {
-        target: "http://localhost/tracert/backend/public_html",
+        target: "https://tracerapp.uiidalwa.web.id",
         changeOrigin: true,
       },
       "/sanctum": {
-        target: "http://localhost/tracert/backend/public_html",
+        target: "https://tracerapp.uiidalwa.web.id",
         changeOrigin: true,
       },
     },

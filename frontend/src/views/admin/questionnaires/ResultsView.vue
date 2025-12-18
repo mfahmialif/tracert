@@ -57,7 +57,7 @@ onMounted(async () => {
 
 function getChartData(question: any) {
   const labels = Object.keys(question.stats || {});
-  const data = Object.values(question.stats || {}) as number[];
+  const data = Object.values(question.stats || {});
   // Generate random colors
   const backgroundColors = labels.map(
     () => `#${Math.floor(Math.random() * 16777215).toString(16)}`
@@ -82,14 +82,12 @@ function handleExport(type: "excel" | "pdf") {
 
 function handleExportChartPdf() {
   const element = document.getElementById("results-content");
-  if (!element) return;
-
   const opt = {
-    margin: [10, 10, 10, 10] as [number, number, number, number],
+    margin: [10, 10, 10, 10],
     filename: `grafik_hasil_${title.value.replace(/\s+/g, "_")}.pdf`,
-    image: { type: "jpeg" as const, quality: 0.98 },
+    image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
   };
   html2pdf().set(opt).from(element).save();
 }

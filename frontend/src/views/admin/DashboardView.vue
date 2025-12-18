@@ -58,11 +58,11 @@ const chartOptions = computed(() => ({
 }));
 
 const prodiChartData = computed(() => ({
-  labels: dashStore.data?.per_prodi?.map((p: any) => p.nama) || [],
+  labels: dashStore.data?.per_prodi?.map((p) => p.nama) || [],
   datasets: [
     {
       label: "Responses",
-      data: dashStore.data?.per_prodi?.map((p: any) => p.total_responses) || [],
+      data: dashStore.data?.per_prodi?.map((p) => p.total_responses) || [],
       backgroundColor: "#6366f1",
       borderRadius: 4,
     },
@@ -70,11 +70,11 @@ const prodiChartData = computed(() => ({
 }));
 
 const yearChartData = computed(() => ({
-  labels: dashStore.data?.per_tahun?.map((p: any) => p.tahun) || [],
+  labels: dashStore.data?.per_tahun?.map((p) => p.tahun) || [],
   datasets: [
     {
       label: "Responses",
-      data: dashStore.data?.per_tahun?.map((p: any) => p.total_responses) || [],
+      data: dashStore.data?.per_tahun?.map((p) => p.total_responses) || [],
       backgroundColor: "#8b5cf6",
       borderRadius: 4,
     },

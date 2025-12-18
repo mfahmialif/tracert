@@ -3,6 +3,7 @@
 import { ref, onMounted, h, computed } from "vue";
 import api from "@/services/api";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "vue-router";
@@ -36,6 +37,8 @@ import {
   getCoreRowModel,
   createColumnHelper,
   FlexRender,
+  getPaginationRowModel,
+  getFilteredRowModel,
 } from "@tanstack/vue-table";
 import { Card, CardContent } from "@/components/ui/card";
 import {
