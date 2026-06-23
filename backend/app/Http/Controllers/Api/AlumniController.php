@@ -67,43 +67,6 @@ class AlumniController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'nim' => 'required|string|max:20|unique:alumni,nim',
-            'nama' => 'required|string|max:100',
-            'prodi_id' => 'required|exists:prodis,id',
-            'year_id' => 'required|exists:years,id',
-            'email' => 'required|email|max:255',
-            'no_hp' => 'nullable|string|max:20',
-            'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',
-        ]);
-
-        try {
-            \Illuminate\Support\Facades\DB::beginTransaction();
-
-            // Create User if not exists (logic changed: usually user calls this endpoint, but if admin creates alumni, maybe they create user too?)
-            // For now, assuming user_id depends on existing user or we create one.
-            // But wait, the validation above asks for 'user_id', which implies user must exist.
-            // However, the original code created a user.
-            // Let's stick to the previous logic: Create User then Alumni.
-            // But validation had 'user_id' => 'required'.
-            // If admin creates alumni, they probably provide just NIM/Name and we generate User.
-            // Let's remove 'user_id' from input validation and generate it.
-
-            // Re-evaluating validation for store method used by Admin:
-            // Admin provides NIM, Name, Prodi, Year, etc. System creates User.
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return response()->json(['message' => $e->getMessage()], 500);
-        }
-
-        // Correcting the logic to match previous implementation
-        // user_id should NOT be in validation if we create it.
-        // But if we use external user_id, we keep it.
-        // Previous code:
-        // $user = User::create([...]);
-        // $alumni = Alumni::create(..., 'user_id' => $user->id);
-
         return $this->storeLogic($request);
     }
 

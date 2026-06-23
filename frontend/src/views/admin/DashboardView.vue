@@ -21,7 +21,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Users, FileText, LayoutDashboard, School } from "lucide-vue-next";
+import { Users, FileText, LayoutDashboard, School, TrendingUp } from "lucide-vue-next";
 
 ChartJS.register(
   CategoryScale,
@@ -47,7 +47,11 @@ const chartOptions = computed(() => ({
   },
   scales: {
     x: {
-      ticks: { color: isDark.value ? "#9ca3af" : "#4b5563" },
+      ticks: {
+        autoSkip: true,
+        maxRotation: 0,
+        color: isDark.value ? "#9ca3af" : "#4b5563",
+      },
       grid: { color: isDark.value ? "#374151" : "#e5e7eb" },
     },
     y: {
@@ -63,8 +67,8 @@ const prodiChartData = computed(() => ({
     {
       label: "Responses",
       data: dashStore.data?.per_prodi?.map((p) => p.total_responses) || [],
-      backgroundColor: "#6366f1",
-      borderRadius: 4,
+      backgroundColor: "#059669",
+      borderRadius: 10,
     },
   ],
 }));
@@ -75,8 +79,8 @@ const yearChartData = computed(() => ({
     {
       label: "Responses",
       data: dashStore.data?.per_tahun?.map((p) => p.total_responses) || [],
-      backgroundColor: "#8b5cf6",
-      borderRadius: 4,
+      backgroundColor: "#14b8a6",
+      borderRadius: 10,
     },
   ],
 }));
@@ -84,35 +88,53 @@ const yearChartData = computed(() => ({
 
 <template>
   <AdminLayout>
-    <div class="flex items-center justify-between">
-      <h1 class="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
+    <div class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/[0.72] p-6 shadow-xl shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.055] md:p-8">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="mb-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
+            Admin Console
+          </p>
+          <h1 class="text-3xl font-black tracking-tight md:text-4xl">Dashboard Overview</h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Pantau alumni, kuesioner aktif, dan performa respons tracer study dalam satu ruang kerja.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
+          <TrendingUp class="h-5 w-5" />
+          Data ringkas realtime
+        </div>
+      </div>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
+      <Card class="group overflow-hidden">
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
           <CardTitle class="text-sm font-medium">Total Alumni</CardTitle>
-          <Users class="h-4 w-4 text-muted-foreground" />
+          <span class="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+            <Users class="h-5 w-5" />
+          </span>
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">
+          <div class="text-3xl font-black">
             <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
             <span v-else>{{ dashStore.data?.summary?.total_alumni || 0 }}</span>
           </div>
           <CardDescription>+20.1% from last month</CardDescription>
         </CardContent>
       </Card>
-      <Card>
+      <Card class="group overflow-hidden">
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
           <CardTitle class="text-sm font-medium">Responses</CardTitle>
-          <FileText class="h-4 w-4 text-muted-foreground" />
+          <span class="grid h-10 w-10 place-items-center rounded-2xl bg-teal-500/10 text-teal-700 dark:text-teal-300">
+            <FileText class="h-5 w-5" />
+          </span>
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">
+          <div class="text-3xl font-black">
             <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
             <span v-else>{{
               dashStore.data?.summary?.total_responses || 0
@@ -121,15 +143,17 @@ const yearChartData = computed(() => ({
           <CardDescription>Total submissions</CardDescription>
         </CardContent>
       </Card>
-      <Card>
+      <Card class="group overflow-hidden">
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
           <CardTitle class="text-sm font-medium">Active Forms</CardTitle>
-          <LayoutDashboard class="h-4 w-4 text-muted-foreground" />
+          <span class="grid h-10 w-10 place-items-center rounded-2xl bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">
+            <LayoutDashboard class="h-5 w-5" />
+          </span>
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">
+          <div class="text-3xl font-black">
             <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
             <span v-else>{{
               dashStore.data?.summary?.active_questionnaires || 0
@@ -138,15 +162,17 @@ const yearChartData = computed(() => ({
           <CardDescription>Accepting responses</CardDescription>
         </CardContent>
       </Card>
-      <Card>
+      <Card class="group overflow-hidden">
         <CardHeader
           class="flex flex-row items-center justify-between space-y-0 pb-2"
         >
           <CardTitle class="text-sm font-medium">Response Rate</CardTitle>
-          <School class="h-4 w-4 text-muted-foreground" />
+          <span class="grid h-10 w-10 place-items-center rounded-2xl bg-lime-500/10 text-lime-700 dark:text-lime-300">
+            <School class="h-5 w-5" />
+          </span>
         </CardHeader>
         <CardContent>
-          <div class="text-2xl font-bold">
+          <div class="text-3xl font-black">
             <Skeleton v-if="dashStore.loading" class="h-8 w-20" />
             <span v-else
               >{{ dashStore.data?.summary?.response_rate || 0 }}%</span
@@ -157,23 +183,23 @@ const yearChartData = computed(() => ({
       </Card>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-      <Card class="col-span-4">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-7">
+      <Card class="lg:col-span-4">
         <CardHeader>
           <CardTitle>Respon per Program Studi</CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="h-[300px]">
+          <div class="h-64 sm:h-72 lg:h-[300px]">
             <Bar :data="prodiChartData" :options="chartOptions" />
           </div>
         </CardContent>
       </Card>
-      <Card class="col-span-3">
+      <Card class="lg:col-span-3">
         <CardHeader>
           <CardTitle>Respon per Tahun</CardTitle>
         </CardHeader>
         <CardContent>
-          <div class="h-[300px]">
+          <div class="h-64 sm:h-72 lg:h-[300px]">
             <Bar :data="yearChartData" :options="chartOptions" />
           </div>
         </CardContent>

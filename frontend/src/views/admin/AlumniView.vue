@@ -47,6 +47,8 @@ import {
   Download as DownloadIcon,
   Upload,
   Plus,
+  Users,
+  Sparkles,
 } from "lucide-vue-next";
 import {
   useVueTable,
@@ -288,9 +290,9 @@ async function fetchAlumni() {
         search: search.value,
         sort_by: sortField,
         sort_order: sortOrder,
-        prodi_id: selectedProdi.value,
-        year_id: selectedYear.value, // Changed from tahun_lulus
-        status: selectedStatus.value,
+        prodi_id: selectedProdi.value === "all" ? "" : selectedProdi.value,
+        year_id: selectedYear.value === "all" ? "" : selectedYear.value,
+        status: selectedStatus.value === "all" ? "" : selectedStatus.value,
       },
     });
     alumni.value = response.data.data;
@@ -447,25 +449,37 @@ async function handleExport() {
 
 <template>
   <AdminLayout>
-    <div
-      class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0"
-    >
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Manajemen Alumni</h1>
-        <p class="text-muted-foreground">
-          Kelola data alumni dan status kelulusan
-        </p>
+    <div class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/[0.72] p-6 shadow-xl shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.055] md:p-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="mb-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
+            <Users class="mr-2 h-3.5 w-3.5" />
+            Alumni
+          </p>
+          <h1 class="text-3xl font-black tracking-tight md:text-4xl">Manajemen Alumni</h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Kelola data alumni, program studi, tahun lulus, dan status alumni dalam tampilan admin yang konsisten.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
+          <Sparkles class="h-5 w-5" />
+          {{ pagination.total }} data alumni
+        </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <Button @click="handleCreate" class="w-full sm:w-auto">
+    </div>
+
+    <div class="rounded-[1.75rem] border border-white/80 bg-white/[0.62] p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.045]">
+      <div class="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_auto] 2xl:items-center">
+      <div class="order-2 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-end 2xl:order-2">
+        <Button @click="handleCreate" class="h-12 w-full rounded-2xl bg-emerald-600 px-5 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700 sm:w-auto">
           <Plus class="h-4 w-4 sm:mr-2" />
-          <span class="hidden sm:inline">Tambah Alumni</span>
+          <span class="hidden sm:inline">Alumni</span>
         </Button>
         <Button
           variant="outline"
           @click="handleExport"
           :disabled="exporting"
-          class="flex-1 sm:flex-none"
+          class="h-12 flex-1 rounded-2xl bg-white/70 sm:flex-none dark:bg-slate-950/40"
         >
           <span
             v-if="exporting"
@@ -478,7 +492,7 @@ async function handleExport() {
         </Button>
         <Dialog v-model:open="showImportModal">
           <DialogTrigger as-child>
-            <Button variant="outline" class="flex-1 sm:flex-none">
+            <Button variant="outline" class="h-12 flex-1 rounded-2xl bg-white/70 sm:flex-none dark:bg-slate-950/40">
               <Upload class="h-4 w-4 sm:mr-2" />
               <span class="hidden sm:inline">Import</span>
             </Button>
@@ -544,27 +558,22 @@ async function handleExport() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
 
-    <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
-      <div class="flex flex-1 flex-col sm:flex-row sm:items-center gap-2">
-        <div class="relative w-full sm:max-w-xs">
+      <div class="order-1 grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(280px,1fr)_190px_170px_170px_110px] 2xl:order-1">
+        <div class="relative w-full sm:col-span-2 lg:col-span-1">
           <Search
-            class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"
+            class="absolute left-4 top-3.5 h-4 w-4 text-slate-400"
           />
           <Input
             v-model="search"
             placeholder="Cari NIM atau nama..."
-            class="pl-8 w-full"
+            class="h-12 w-full rounded-2xl bg-white/80 pl-11 dark:bg-slate-950/50"
             @input="fetchAlumni"
           />
         </div>
 
-        <div class="flex flex-wrap gap-2">
           <Select v-model="selectedProdi" @update:model-value="fetchAlumni">
-            <SelectTrigger class="w-full sm:w-[180px]">
+            <SelectTrigger class="h-12 w-full rounded-2xl bg-white/70 dark:bg-slate-950/40">
               <SelectValue placeholder="Semua Prodi" />
             </SelectTrigger>
             <SelectContent>
@@ -580,7 +589,7 @@ async function handleExport() {
           </Select>
 
           <Select v-model="selectedYear" @update:model-value="fetchAlumni">
-            <SelectTrigger class="w-full sm:w-[140px]">
+            <SelectTrigger class="h-12 w-full rounded-2xl bg-white/70 dark:bg-slate-950/40">
               <SelectValue placeholder="Tahun Lulus" />
             </SelectTrigger>
             <SelectContent>
@@ -596,7 +605,7 @@ async function handleExport() {
           </Select>
 
           <Select v-model="selectedStatus" @update:model-value="fetchAlumni">
-            <SelectTrigger class="w-full sm:w-[160px]">
+            <SelectTrigger class="h-12 w-full rounded-2xl bg-white/70 dark:bg-slate-950/40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -608,15 +617,12 @@ async function handleExport() {
               <SelectItem value="Belum Bekerja">Belum Bekerja</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
 
-      <div class="w-full sm:w-[100px]">
         <Select
           :model-value="pagination.per_page.toString()"
           @update:model-value="handleLimitChange"
         >
-          <SelectTrigger>
+          <SelectTrigger class="h-12 w-full rounded-2xl bg-white/70 dark:bg-slate-950/40">
             <SelectValue placeholder="Limit" />
           </SelectTrigger>
           <SelectContent>
@@ -627,11 +633,12 @@ async function handleExport() {
           </SelectContent>
         </Select>
       </div>
+      </div>
     </div>
 
-    <Card>
+    <Card class="overflow-hidden">
       <CardContent class="p-0">
-        <div class="rounded-md border overflow-x-auto">
+        <div class="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow
@@ -683,7 +690,7 @@ async function handleExport() {
     </Card>
 
     <!-- Pagination -->
-    <div class="flex items-center justify-end space-x-2 py-4">
+    <div class="flex items-center justify-end space-x-2 rounded-[1.5rem] border border-white/80 bg-white/[0.55] p-3 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.04]">
       <Button
         variant="outline"
         size="icon"

@@ -229,17 +229,18 @@ async function handleReorder() {
 
 <template>
   <AdminLayout>
-    <div class="p-4 container mx-auto max-w-5xl space-y-6">
+    <div class="mx-auto max-w-6xl space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between">
+      <div class="rounded-[2rem] border border-white/80 bg-white/[0.72] p-5 shadow-xl shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.055] md:p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div class="flex items-center gap-4">
-          <Button variant="outline" size="icon" @click="router.back()">
+          <Button variant="outline" size="icon" class="rounded-2xl bg-white/70 dark:bg-slate-950/40" @click="router.back()">
             <ChevronLeft class="h-4 w-4" />
           </Button>
           <div>
             <div class="flex items-center gap-2">
-              <h1 class="text-2xl font-bold">{{ questionnaire?.title }}</h1>
-              <Button variant="ghost" size="icon" @click="openEditDetails">
+              <h1 class="text-2xl font-black md:text-3xl">{{ questionnaire?.title }}</h1>
+              <Button variant="ghost" size="icon" class="rounded-2xl" @click="openEditDetails">
                 <Edit2 class="h-4 w-4" />
               </Button>
             </div>
@@ -253,7 +254,7 @@ async function handleReorder() {
         <!-- Question Modal Trigger -->
         <Dialog v-model:open="showQuestionModal">
           <DialogTrigger as-child>
-            <Button @click="resetForm"
+            <Button class="h-11 rounded-2xl bg-emerald-600 px-5 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700" @click="resetForm"
               ><Plus class="mr-2 h-4 w-4" /> Tambah Pertanyaan</Button
             >
           </DialogTrigger>
@@ -425,6 +426,7 @@ async function handleReorder() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <!-- Question List -->
@@ -441,7 +443,7 @@ async function handleReorder() {
           class="border-l-4 border-l-primary/50"
         >
           <CardHeader class="pb-2">
-            <CardTitle class="text-lg">Bagian {{ section.section }}</CardTitle>
+            <CardTitle class="text-lg font-black">Bagian {{ section.section }}</CardTitle>
           </CardHeader>
           <CardContent>
             <draggable
@@ -454,7 +456,7 @@ async function handleReorder() {
             >
               <template #item="{ element: q }">
                 <div
-                  class="group flex items-start gap-4 rounded-lg border p-4 bg-card hover:bg-muted/50 transition-colors relative"
+                  class="group relative flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white/70 p-4 transition-colors hover:bg-emerald-50/60 dark:border-white/10 dark:bg-slate-950/35 dark:hover:bg-white/[0.07]"
                 >
                   <GripVertical
                     class="h-5 w-5 text-muted-foreground mt-1 cursor-move opacity-0 group-hover:opacity-100"

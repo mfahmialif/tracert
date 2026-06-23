@@ -32,7 +32,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, CheckCircle, Info } from "lucide-vue-next";
+import { Check, ChevronLeft, ChevronRight, CheckCircle, Info } from "lucide-vue-next";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const route = useRoute();
@@ -146,11 +146,18 @@ function handleSuccessClose() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-muted/100 py-8 px-4">
+  <div class="min-h-screen overflow-hidden bg-transparent px-4 py-8 text-slate-950 dark:text-white">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+      <div
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(20,184,166,0.14),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(240,253,244,0.9))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(45,212,191,0.1),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98),rgba(6,30,24,0.95))]"
+      />
+      <div class="absolute -top-32 left-1/4 h-[26rem] w-[26rem] rounded-full bg-emerald-500/12 blur-3xl dark:bg-emerald-400/10" />
+      <div class="absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-teal-500/10 blur-3xl dark:bg-teal-400/10" />
+    </div>
     <div class="container mx-auto max-w-3xl">
       <Alert
         v-if="isReadOnly"
-        class="mb-6 border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+        class="mb-6 rounded-2xl border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300"
       >
         <Info class="h-4 w-4" />
         <AlertTitle>Mode Baca Saja</AlertTitle>
@@ -161,42 +168,47 @@ function handleSuccessClose() {
       </Alert>
 
       <!-- Header -->
-      <Card class="mb-6">
+      <Card class="mb-6 rounded-[2rem] border-white/80 bg-white/82 shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
         <CardHeader>
           <div class="flex items-center justify-between mb-2">
             <Button
               variant="ghost"
               size="sm"
-              @click="router.push('/')"
-              class="-ml-2"
+              @click="router.push('/home')"
+              class="-ml-2 rounded-2xl"
             >
               <ChevronLeft class="h-4 w-4 mr-1" />
               Kembali
             </Button>
-            <span class="text-sm text-muted-foreground"
+            <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-200"
               >Bagian {{ currentSection }} dari {{ totalSections }}</span
             >
           </div>
-          <CardTitle>{{ questionnaire?.title }}</CardTitle>
-          <CardDescription>{{ questionnaire?.description }}</CardDescription>
+          <CardTitle class="text-3xl font-black tracking-tight">{{ questionnaire?.title }}</CardTitle>
+          <CardDescription class="pt-2 leading-7 text-slate-600 dark:text-slate-300">{{ questionnaire?.description }}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Progress :model-value="progress" class="h-2" />
+          <Progress :model-value="progress" class="h-3 rounded-full" />
+          <p class="mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            Progress {{ progress }}%
+          </p>
         </CardContent>
       </Card>
 
-      <!-- Questions -->
-      <Card v-if="currentSectionData">
+      <Card v-if="currentSectionData" class="rounded-[2rem] border-white/80 bg-white/82 shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]">
         <CardHeader>
-          <CardTitle class="text-lg">Bagian {{ currentSection }}</CardTitle>
+          <CardTitle class="text-xl font-black text-emerald-700 dark:text-emerald-300">Bagian {{ currentSection }}</CardTitle>
         </CardHeader>
         <CardContent class="space-y-8">
           <template
             v-for="question in currentSectionData.questions"
             :key="question.id"
           >
-            <div v-if="shouldShowQuestion(question)" class="space-y-3">
-              <Label class="text-base font-medium">
+            <div
+              v-if="shouldShowQuestion(question)"
+              class="space-y-3 rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5 dark:border-white/10 dark:bg-slate-950/40"
+            >
+              <Label class="text-base font-semibold leading-7">
                 {{ question.text }}
                 <span v-if="question.is_required" class="text-destructive"
                   >*</span
@@ -209,6 +221,7 @@ function handleSuccessClose() {
                 v-model="answers[question.id]"
                 placeholder="Jawaban Anda"
                 :disabled="isReadOnly"
+                class="rounded-2xl bg-white/80 dark:bg-slate-950/50"
               />
 
               <!-- Textarea -->
@@ -218,6 +231,7 @@ function handleSuccessClose() {
                 placeholder="Jawaban Anda"
                 rows="3"
                 :disabled="isReadOnly"
+                class="rounded-2xl bg-white/80 dark:bg-slate-950/50"
               />
 
               <!-- Number -->
@@ -226,6 +240,7 @@ function handleSuccessClose() {
                 v-model.number="answers[question.id]"
                 type="number"
                 :disabled="isReadOnly"
+                class="rounded-2xl bg-white/80 dark:bg-slate-950/50"
               />
 
               <!-- Date -->
@@ -234,6 +249,7 @@ function handleSuccessClose() {
                 v-model="answers[question.id]"
                 type="date"
                 :disabled="isReadOnly"
+                class="rounded-2xl bg-white/80 dark:bg-slate-950/50"
               />
 
               <!-- Radio -->
@@ -241,11 +257,12 @@ function handleSuccessClose() {
                 v-else-if="question.type === 'radio'"
                 v-model="answers[question.id]"
                 :disabled="isReadOnly"
+                class="space-y-3"
               >
                 <div
                   v-for="option in question.options"
                   :key="option"
-                  class="flex items-center space-x-2"
+                  class="flex items-center space-x-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]"
                 >
                   <RadioGroupItem
                     :id="`${question.id}-${option}`"
@@ -268,7 +285,7 @@ function handleSuccessClose() {
                 <div
                   v-for="option in question.options"
                   :key="option"
-                  class="flex items-center space-x-2 cursor-pointer"
+                  class="flex cursor-pointer items-center space-x-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]"
                   @click="
                     () => {
                       if (isReadOnly) return;
@@ -280,9 +297,9 @@ function handleSuccessClose() {
                 >
                   <!-- Manual Checkbox Implementation -->
                   <div
-                    class="grid place-content-center h-4 w-4 shrink-0 rounded-sm border border-primary shadow transition-colors"
+                    class="grid h-5 w-5 shrink-0 place-content-center rounded-md border border-emerald-500 shadow transition-colors"
                     :class="{
-                      'bg-primary text-primary-foreground': (
+                      'bg-emerald-600 text-white': (
                         answers[question.id] || []
                       ).includes(option),
                       'opacity-50 cursor-not-allowed': isReadOnly,
@@ -308,7 +325,7 @@ function handleSuccessClose() {
                 v-model="answers[question.id]"
                 :disabled="isReadOnly"
               >
-                <SelectTrigger>
+                <SelectTrigger class="rounded-2xl bg-white/80 dark:bg-slate-950/50">
                   <SelectValue placeholder="Pilih jawaban..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -331,12 +348,12 @@ function handleSuccessClose() {
                       v-model.number="answers[question.id]"
                       :min="1"
                       :max="question.options?.length || 5"
-                      class="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-primary"
+                      class="h-2 w-full cursor-pointer appearance-none rounded-lg bg-secondary accent-emerald-600 dark:bg-slate-800"
                       :disabled="isReadOnly"
                     />
                   </div>
                   <span
-                    class="font-bold border p-2 rounded-md w-12 text-center"
+                    class="w-12 rounded-2xl border border-emerald-200 bg-white p-2 text-center font-bold text-emerald-700 dark:border-emerald-400/20 dark:bg-slate-950/50 dark:text-emerald-300"
                     >{{ answers[question.id] || "-" }}</span
                   >
                 </div>
@@ -355,6 +372,7 @@ function handleSuccessClose() {
             v-if="currentSection > 1"
             variant="outline"
             @click="prevSection"
+            class="rounded-2xl"
           >
             <ChevronLeft class="mr-2 h-4 w-4" />
             Sebelumnya
@@ -365,6 +383,7 @@ function handleSuccessClose() {
             v-if="currentSection < totalSections"
             @click="nextSection"
             :disabled="!isSectionValid"
+            class="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             Selanjutnya
             <ChevronRight class="ml-2 h-4 w-4" />
@@ -374,6 +393,7 @@ function handleSuccessClose() {
             variant="default"
             @click="submitQuestionnaire"
             :disabled="!isSectionValid || qStore.submitting"
+            class="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
           >
             <span
               v-if="qStore.submitting"
@@ -387,7 +407,7 @@ function handleSuccessClose() {
             >
               <CheckCircle class="w-4 h-4 mr-2" /> Sudah Dikirim
             </div>
-            <Button variant="outline" @click="router.push('/')">
+            <Button variant="outline" class="rounded-2xl" @click="router.push('/home')">
               Kembali
             </Button>
           </div>
@@ -396,10 +416,10 @@ function handleSuccessClose() {
 
       <!-- Success Dialog -->
       <Dialog :open="showSuccess" @update:open="handleSuccessClose">
-        <DialogContent class="sm:max-w-md text-center">
+        <DialogContent class="rounded-[2rem] text-center sm:max-w-md">
           <DialogHeader>
-            <div class="mx-auto bg-green-100 p-3 rounded-full w-fit mb-4">
-              <CheckCircle class="h-8 w-8 text-green-600" />
+            <div class="mx-auto mb-4 w-fit rounded-2xl bg-emerald-100 p-3 dark:bg-emerald-400/10">
+              <CheckCircle class="h-8 w-8 text-emerald-600 dark:text-emerald-300" />
             </div>
             <DialogTitle>Terima Kasih!</DialogTitle>
             <DialogDescription>
@@ -407,7 +427,9 @@ function handleSuccessClose() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter class="sm:justify-center">
-            <Button @click="handleSuccessClose"> Kembali ke Dashboard </Button>
+            <Button class="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300" @click="handleSuccessClose">
+              Kembali ke Dashboard
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

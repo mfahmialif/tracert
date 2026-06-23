@@ -229,12 +229,15 @@ async function handleDelete(id: number) {
 
 <template>
   <AdminLayout>
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 class="text-3xl font-bold tracking-tight">Manajemen Fakultas</h1>
         <p class="text-muted-foreground">Kelola data fakultas</p>
       </div>
-      <Button @click="router.push('/admin/faculties/create')">
+      <Button
+        class="h-12 w-full rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700 md:w-auto md:px-6"
+        @click="router.push('/admin/faculties/create')"
+      >
         <Plus class="mr-2 h-4 w-4" /> Tambah Fakultas
       </Button>
     </div>
@@ -242,12 +245,12 @@ async function handleDelete(id: number) {
     <div
       class="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4"
     >
-      <div class="relative w-full max-w-sm">
+      <div class="relative w-full md:max-w-sm">
         <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           v-model="search"
           placeholder="Cari nama fakultas..."
-          class="pl-8"
+          class="h-12 rounded-2xl bg-white/70 pl-8 dark:bg-slate-950/40"
           @input="fetchFaculties"
         />
       </div>
@@ -257,7 +260,7 @@ async function handleDelete(id: number) {
           :model-value="pagination.per_page.toString()"
           @update:model-value="handleLimitChange"
         >
-          <SelectTrigger>
+          <SelectTrigger class="h-12 rounded-2xl bg-white/70 dark:bg-slate-950/40">
             <SelectValue placeholder="Limit" />
           </SelectTrigger>
           <SelectContent>

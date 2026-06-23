@@ -33,7 +33,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Sun,
   Moon,
-  GraduationCap,
   Menu,
   LogOut,
   FileText,
@@ -55,6 +54,7 @@ const router = useRouter();
 const authStore = useAuthStore();
 const qStore = useQuestionnaireStore();
 const { isDark, toggleTheme } = useTheme();
+const logoImage = "/logo_uiidalwa.png";
 
 import { Input } from "@/components/ui/input";
 import { useDebounceFn } from "@vueuse/core"; // Try using vueuse if available or implement manual debounce
@@ -157,24 +157,32 @@ const firstName = computed(
 </script>
 
 <template>
-  <div class="min-h-screen bg-background">
-    <!-- Navbar -->
+  <div class="min-h-screen overflow-hidden bg-transparent text-slate-950 dark:text-white">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+      <div
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(20,184,166,0.14),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.88),rgba(240,253,244,0.9))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(45,212,191,0.1),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.98),rgba(6,30,24,0.95))]"
+      />
+      <div class="absolute -top-32 left-1/4 h-[26rem] w-[26rem] rounded-full bg-emerald-500/12 blur-3xl dark:bg-emerald-400/10" />
+      <div class="absolute bottom-0 right-0 h-[24rem] w-[24rem] rounded-full bg-teal-500/10 blur-3xl dark:bg-teal-400/10" />
+    </div>
+
     <header
-      class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      class="sticky top-0 z-40 w-full border-b border-white/70 bg-white/82 shadow-lg shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/82"
     >
-      <div class="container flex h-16 items-center justify-between px-4">
-        <!-- Mobile Menu -->
+      <div class="container flex h-20 items-center justify-between px-4">
         <Sheet>
           <SheetTrigger as-child>
-            <Button variant="ghost" size="icon" class="md:hidden">
+            <Button variant="ghost" size="icon" class="rounded-2xl md:hidden">
               <Menu class="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left">
+          <SheetContent side="left" class="border-r border-emerald-100/80 bg-white/95 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/95">
             <SheetHeader>
               <SheetTitle class="flex items-center gap-2">
-                <GraduationCap class="h-6 w-6 text-primary" />
-                Tracer Study
+                <span class="grid h-10 w-10 place-items-center rounded-2xl border border-emerald-200 bg-white p-2 dark:border-emerald-400/20">
+                  <img :src="logoImage" alt="UII Dalwa" class="h-7 w-auto object-contain" />
+                </span>
+                <span>Tracer Study</span>
               </SheetTitle>
             </SheetHeader>
             <div class="space-y-4 py-4">
@@ -193,22 +201,25 @@ const firstName = computed(
           </SheetContent>
         </Sheet>
 
-        <!-- Logo -->
-        <div class="flex items-center gap-2 font-bold text-xl">
-          <GraduationCap class="h-6 w-6 text-primary hidden md:block" />
+        <div class="flex items-center gap-3">
           <span
-            class="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent"
-            >Tracer Study</span
+            class="grid h-12 w-12 place-items-center rounded-2xl border border-emerald-200/70 bg-white p-2 shadow-lg shadow-emerald-900/10 dark:border-emerald-400/20 dark:bg-white/95"
           >
+            <img :src="logoImage" alt="UII Dalwa" class="h-8 w-auto object-contain" />
+          </span>
+          <span class="hidden sm:block">
+            <span class="block text-base font-black leading-tight">Tracer Study</span>
+            <span class="block text-xs font-medium text-emerald-700 dark:text-emerald-300">Portal Alumni</span>
+          </span>
         </div>
 
-        <!-- Right Actions -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             @click="toggleTheme"
-            class="rounded-full"
+            class="rounded-2xl"
+            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
           >
             <Sun v-if="isDark" class="h-5 w-5" />
             <Moon v-else class="h-5 w-5" />
@@ -216,16 +227,16 @@ const firstName = computed(
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="ghost" class="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" class="relative h-10 w-10 rounded-2xl">
                 <Avatar class="h-8 w-8">
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback class="bg-primary/10 text-primary">{{
+                  <AvatarFallback class="bg-emerald-500/10 font-black text-emerald-700 dark:text-emerald-300">{{
                     userInitials
                   }}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent class="w-56" align="end">
+            <DropdownMenuContent class="w-56 rounded-2xl" align="end">
               <DropdownMenuLabel>
                 <div class="flex flex-col space-y-1">
                   <p class="text-sm font-medium leading-none">
@@ -250,27 +261,27 @@ const firstName = computed(
       </div>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-4 py-8 space-y-8">
-      <!-- Welcome -->
+      <section
+        class="overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/72 p-6 shadow-2xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] md:p-8"
+      >
       <div class="space-y-2">
-        <h1 class="text-3xl font-bold tracking-tight">
+        <h1 class="text-4xl font-black tracking-tight">
           Halo, {{ firstName }}! 👋
         </h1>
-        <p class="text-muted-foreground">
+        <p class="text-slate-600 dark:text-slate-300">
           {{ authStore.user?.alumni?.prodi?.nama }} • Lulusan
           {{ authStore.user?.alumni?.tahun_lulus }}
         </p>
       </div>
 
-      <!-- Stats -->
-      <div class="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <Card class="rounded-[2rem] border-slate-200/80 bg-white/80 shadow-lg shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.06]">
           <CardHeader
             class="flex flex-row items-center justify-between space-y-0 pb-2"
           >
             <CardTitle class="text-sm font-medium">Total Kuesioner</CardTitle>
-            <FileText class="h-4 w-4 text-muted-foreground" />
+            <FileText class="h-5 w-5 text-emerald-600 dark:text-emerald-300" />
           </CardHeader>
           <CardContent>
             <div class="text-2xl font-bold">
@@ -278,7 +289,7 @@ const firstName = computed(
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card class="rounded-[2rem] border-slate-200/80 bg-white/80 shadow-lg shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.06]">
           <CardHeader
             class="flex flex-row items-center justify-between space-y-0 pb-2"
           >
@@ -291,7 +302,7 @@ const firstName = computed(
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card class="rounded-[2rem] border-slate-200/80 bg-white/80 shadow-lg shadow-slate-900/5 dark:border-white/10 dark:bg-white/[0.06]">
           <CardHeader
             class="flex flex-row items-center justify-between space-y-0 pb-2"
           >
@@ -306,12 +317,11 @@ const firstName = computed(
         </Card>
       </div>
 
-      <!-- Questionnaires -->
-      <div class="space-y-4">
+      <div class="mt-8 space-y-5">
         <div
           class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
         >
-          <h2 class="text-xl font-semibold tracking-tight">
+          <h2 class="text-2xl font-black tracking-tight">
             Kuesioner Tersedia
           </h2>
           <div
@@ -321,7 +331,7 @@ const firstName = computed(
               <Input
                 type="text"
                 placeholder="Cari kuesioner..."
-                class="pl-10"
+                class="rounded-2xl bg-white/80 pl-10 dark:bg-slate-950/50"
                 v-model="searchQuery"
               />
               <span
@@ -348,7 +358,7 @@ const firstName = computed(
             </div>
             <div class="flex gap-2 w-full md:w-auto">
               <Select v-model="sortBy">
-                <SelectTrigger class="flex-1 md:w-[180px]">
+                <SelectTrigger class="flex-1 rounded-2xl bg-white/80 md:w-[180px] dark:bg-slate-950/50">
                   <SelectValue placeholder="Urutkan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,7 +367,7 @@ const firstName = computed(
                   <SelectItem value="year">Tahun</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon" @click="toggleSortOrder">
+              <Button variant="outline" size="icon" class="rounded-2xl" @click="toggleSortOrder">
                 <ArrowUpDown class="h-4 w-4" />
               </Button>
             </div>
@@ -369,14 +379,14 @@ const firstName = computed(
           <Button
             :variant="activeTab === 'pending' ? 'default' : 'outline'"
             @click="activeTab = 'pending'"
-            class="rounded-full"
+            class="rounded-2xl"
           >
             Belum Diisi
           </Button>
           <Button
             :variant="activeTab === 'completed' ? 'default' : 'outline'"
             @click="activeTab = 'completed'"
-            class="rounded-full"
+            class="rounded-2xl"
           >
             Sudah Diisi
           </Button>
@@ -406,11 +416,11 @@ const firstName = computed(
           <Card
             v-for="q in sortedQuestionnaires"
             :key="q.id"
-            class="flex flex-col transition-all hover:shadow-lg"
+            class="flex flex-col rounded-[2rem] border-slate-200/80 bg-white/82 shadow-xl shadow-slate-900/5 transition-all hover:-translate-y-1 hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-700/10 dark:border-white/10 dark:bg-white/[0.06] dark:hover:border-emerald-400/30"
           >
             <CardHeader>
               <div class="flex justify-between items-start gap-2">
-                <CardTitle class="line-clamp-1">{{ q.title }}</CardTitle>
+                <CardTitle class="line-clamp-1 font-black group-hover:text-emerald-700">{{ q.title }}</CardTitle>
                 <div class="flex gap-1 shrink-0">
                   <Badge v-if="q.is_mandatory" variant="destructive"
                     >Wajib</Badge
@@ -444,7 +454,7 @@ const firstName = computed(
             <CardFooter>
               <Button
                 v-if="!q.has_submitted"
-                class="w-full"
+                class="w-full rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
                 @click="router.push(`/questionnaire/${q.id}`)"
               >
                 Isi Kuesioner
@@ -452,7 +462,7 @@ const firstName = computed(
               <Button
                 v-else
                 variant="secondary"
-                class="w-full"
+                class="w-full rounded-2xl"
                 @click="router.push(`/questionnaire/${q.id}`)"
               >
                 Lihat Jawaban
@@ -467,7 +477,7 @@ const firstName = computed(
             variant="outline"
             @click="loadMore"
             :disabled="qStore.loading"
-            class="min-w-[200px]"
+            class="min-w-[200px] rounded-2xl"
           >
             <span
               v-if="qStore.loading"
@@ -477,6 +487,7 @@ const firstName = computed(
           </Button>
         </div>
       </div>
+      </section>
     </main>
   </div>
 </template>

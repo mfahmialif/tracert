@@ -1,43 +1,66 @@
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref } from "vue";
 
-const THEME_KEY = 'tracer-theme'
+const THEME_KEY = "tracer-theme";
+const isDark = ref(false);
+const initialized = ref(false);
+
+function getPreferredTheme() {
+  if (typeof window === "undefined") return false;
+
+  const stored = localStorage.getItem(THEME_KEY);
+
+  if (stored === "dark") return true;
+  if (stored === "light") return false;
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function applyTheme(value = isDark.value) {
+  if (typeof document === "undefined") return;
+
+  const html = document.documentElement;
+
+  html.classList.toggle("dark", value);
+  html.dataset.theme = value ? "dark" : "light";
+  html.style.colorScheme = value ? "dark" : "light";
+}
+
+function initializeTheme() {
+  if (initialized.value) return;
+
+  isDark.value = getPreferredTheme();
+  applyTheme();
+  initialized.value = true;
+
+  window
+    .matchMedia("(prefers-color-scheme: dark)")
+    .addEventListener("change", (event) => {
+      const stored = localStorage.getItem(THEME_KEY);
+
+      if (stored) return;
+
+      isDark.value = event.matches;
+      applyTheme();
+    });
+}
+
+function setTheme(value: boolean) {
+  isDark.value = value;
+  localStorage.setItem(THEME_KEY, value ? "dark" : "light");
+  applyTheme();
+}
+
+function toggleTheme() {
+  setTheme(!isDark.value);
+}
 
 export function useTheme() {
-  const isDark = ref(false)
-
-  // Initialize theme from localStorage or system preference
-  onMounted(() => {
-    const stored = localStorage.getItem(THEME_KEY)
-    if (stored) {
-      isDark.value = stored === 'dark'
-    } else {
-      isDark.value = window.matchMedia('(prefers-color-scheme: dark)').matches
-    }
-    applyTheme()
-  })
-
-  // Watch for theme changes and apply
-  watch(isDark, () => {
-    applyTheme()
-    localStorage.setItem(THEME_KEY, isDark.value ? 'dark' : 'light')
-  })
-
-  function applyTheme() {
-    const html = document.documentElement
-    // Toggle 'dark' class on html element for Tailwind
-    html.classList.toggle('dark', isDark.value)
-    
-    // Also set data-theme if needed for other libs, but shadcn relies mostly on class
-    // We can keep specific style attribute if we want to force color-scheme
-    html.style.colorScheme = isDark.value ? 'dark' : 'light'
-  }
-
-  function toggleTheme() {
-    isDark.value = !isDark.value
-  }
+  initializeTheme();
 
   return {
     isDark,
-    toggleTheme
-  }
+    theme: computed(() => (isDark.value ? "dark" : "light")),
+    setTheme,
+    toggleTheme,
+  };
 }

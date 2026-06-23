@@ -45,7 +45,7 @@ onMounted(() => {
 async function fetchFaculties() {
   try {
     const response = await api.get("/admin/faculties");
-    faculties.value = response.data;
+    faculties.value = response.data?.data ?? response.data ?? [];
   } catch (error) {
     console.error("Failed to fetch faculties", error);
   }

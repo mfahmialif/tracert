@@ -23,7 +23,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronLeft } from "lucide-vue-next";
+import { ChevronLeft, ClipboardList } from "lucide-vue-next";
 
 const router = useRouter();
 const form = ref({
@@ -79,17 +79,34 @@ async function handleSubmit() {
 
 <template>
   <AdminLayout>
-    <div class="p-4 sm:p-8 flex justify-center w-full">
-      <Card class="w-full max-w-2xl">
-        <CardHeader>
+    <div class="mx-auto grid w-full max-w-5xl gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+      <div class="rounded-[2rem] border border-white/80 bg-white/[0.72] p-6 shadow-xl shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.055] md:p-8">
+        <Button
+          variant="ghost"
+          class="-ml-3 mb-6 rounded-2xl"
+          @click="router.back()"
+        >
+          <ChevronLeft class="mr-2 h-4 w-4" /> Kembali
+        </Button>
+        <div class="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+          <ClipboardList class="h-7 w-7" />
+        </div>
+        <h1 class="mt-5 text-3xl font-black tracking-tight">Buat Kuesioner Baru</h1>
+        <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+          Lengkapi informasi dasar, target program studi, dan status publikasi sebelum menambahkan pertanyaan.
+        </p>
+      </div>
+
+      <Card class="w-full">
+        <CardHeader class="border-b border-slate-200/70 dark:border-white/10">
           <Button
             variant="ghost"
-            class="w-fit -ml-4 mb-2"
+            class="w-fit -ml-4 mb-2 rounded-2xl lg:hidden"
             @click="router.back()"
           >
             <ChevronLeft class="mr-2 h-4 w-4" /> Kembali
           </Button>
-          <CardTitle>Buat Kuesioner Baru</CardTitle>
+          <CardTitle class="text-2xl font-black">Detail Kuesioner</CardTitle>
         </CardHeader>
         <CardContent class="space-y-6">
           <div class="space-y-2">
@@ -134,7 +151,7 @@ async function handleSubmit() {
             <div class="space-y-2">
               <Label>Target Program Studi</Label>
               <div
-                class="border rounded-md p-4 max-h-48 overflow-y-auto space-y-2"
+                class="max-h-56 space-y-2 overflow-y-auto rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-slate-950/30"
               >
                 <div
                   v-for="prodi in prodis"
@@ -168,8 +185,8 @@ async function handleSubmit() {
             </div>
           </div>
 
-          <div class="flex flex-col gap-4">
-            <div class="flex items-center space-x-2">
+          <div class="grid gap-3">
+            <div class="flex items-center space-x-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-slate-950/30">
               <input
                 type="checkbox"
                 id="active"
@@ -178,7 +195,7 @@ async function handleSubmit() {
               />
               <Label for="active">Aktifkan Kuesioner</Label>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-slate-950/30">
               <input
                 type="checkbox"
                 id="mandatory"
@@ -187,7 +204,7 @@ async function handleSubmit() {
               />
               <Label for="mandatory">Wajib Diisi</Label>
             </div>
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-slate-950/30">
               <input
                 type="checkbox"
                 id="public"
@@ -200,8 +217,8 @@ async function handleSubmit() {
             </div>
           </div>
         </CardContent>
-        <CardFooter>
-          <Button class="w-full" @click="handleSubmit" :disabled="loading">
+        <CardFooter class="border-t border-slate-200/70 dark:border-white/10">
+          <Button class="h-12 w-full rounded-2xl bg-emerald-600 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700" @click="handleSubmit" :disabled="loading">
             <span v-if="loading">Menyimpan...</span>
             <span v-else>Buat Kuesioner</span>
           </Button>

@@ -1,579 +1,698 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/composables/useTheme";
 import {
-  GraduationCap,
-  TrendingUp,
-  Users,
-  BarChart3,
-  CheckCircle2,
   ArrowRight,
-  Sparkles,
-  Target,
   Award,
+  BarChart3,
+  BriefcaseBusiness,
+  CheckCircle2,
+  ClipboardList,
+  Database,
+  GraduationCap,
+  LineChart,
   Menu,
+  Moon,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Target,
+  Users,
   X,
 } from "lucide-vue-next";
 
 const router = useRouter();
+const { isDark, toggleTheme } = useTheme();
+
 const isVisible = ref(false);
 const isScrolled = ref(false);
 const mobileMenuOpen = ref(false);
-const heroImage = new URL("@/assets/img/hero-islamic.png", import.meta.url)
-  .href;
+const activeSection = ref("");
+let aosObserver: IntersectionObserver | null = null;
 
-onMounted(() => {
-  setTimeout(() => {
-    isVisible.value = true;
-  }, 100);
+const heroImage = new URL("@/assets/img/hero-professional.svg", import.meta.url).href;
+const logoImage = "/logo_uiidalwa.png";
 
-  window.addEventListener("scroll", handleScroll);
-});
+const navItems = [
+  { label: "Home", href: "#home", id: "home" },
+  { label: "Fitur", href: "#features", id: "features" },
+  { label: "Proses", href: "#process", id: "process" },
+  { label: "Kontak", href: "#contact", id: "contact" },
+];
 
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
+const sectionIds = navItems.map((item) => item.id);
 
-function handleScroll() {
-  isScrolled.value = window.scrollY > 100;
-}
+const stats = [
+  { number: "1000+", label: "Alumni Terdata", icon: Users },
+  { number: "95%", label: "Response Rate", icon: LineChart },
+  { number: "50+", label: "Survey Aktif", icon: ClipboardList },
+  { number: "100%", label: "Data Terintegrasi", icon: ShieldCheck },
+];
 
 const features = [
   {
     icon: Users,
     title: "Alumni Tracking",
     description:
-      "Monitor alumni career journeys with an integrated system that provides comprehensive insights",
-    gradient: "from-blue-500 to-cyan-500",
-    image: new URL("@/assets/img/tracking-islamic.png", import.meta.url).href,
+      "Pantau riwayat karier, status pekerjaan, dan perkembangan alumni dalam satu dashboard yang mudah dibaca.",
+    image: new URL("@/assets/img/tracking-professional.svg", import.meta.url).href,
   },
   {
     icon: BarChart3,
-    title: "Data Analytics",
+    title: "Insight Analytics",
     description:
-      "Analytics dashboard delivering deep insights about alumni performance and career progression",
-    gradient: "from-purple-500 to-pink-500",
-    image: new URL("@/assets/img/analytics-islamic.png", import.meta.url).href,
+      "Visualisasi data membantu kampus membaca tren lulusan, kebutuhan kurikulum, dan performa program studi.",
+    image: new URL("@/assets/img/analytics-professional.svg", import.meta.url).href,
   },
   {
-    icon: TrendingUp,
+    icon: ClipboardList,
     title: "Survey Management",
     description:
-      "Manage questionnaires and tracer study surveys with ease and efficiency",
-    gradient: "from-orange-500 to-red-500",
-    image: new URL("@/assets/img/survey-islamic.png", import.meta.url).href,
+      "Kelola kuesioner tracer study, distribusi survey, dan progres pengisian dengan alur yang rapi.",
+    image: new URL("@/assets/img/survey-professional.svg", import.meta.url).href,
   },
   {
     icon: Award,
-    title: "Comprehensive Reporting",
+    title: "Accreditation Ready",
     description:
-      "Generate detailed reports for accreditation and institutional development purposes",
-    gradient: "from-green-500 to-emerald-500",
-    image: new URL("@/assets/img/analytics-islamic.png", import.meta.url).href,
+      "Siapkan laporan ringkas dan akurat untuk akreditasi, evaluasi mutu, serta pengambilan keputusan institusi.",
+    image: new URL("@/assets/img/accreditation-professional.svg", import.meta.url).href,
   },
 ];
 
-const stats = [
-  { number: "1000+", label: "Registered Alumni", icon: Users },
-  { number: "95%", label: "Response Rate", icon: TrendingUp },
-  { number: "50+", label: "Active Surveys", icon: BarChart3 },
-  { number: "100%", label: "Data Accuracy", icon: CheckCircle2 },
+const processSteps = [
+  {
+    step: "01",
+    title: "Kumpulkan Data",
+    description: "Alumni mengisi kuesioner melalui portal publik yang responsif.",
+    icon: Database,
+  },
+  {
+    step: "02",
+    title: "Validasi & Analisis",
+    description: "Admin memantau kualitas data dan membaca insight dari dashboard.",
+    icon: CheckCircle2,
+  },
+  {
+    step: "03",
+    title: "Laporan Institusi",
+    description: "Hasil tracer study siap digunakan untuk evaluasi dan akreditasi.",
+    icon: BriefcaseBusiness,
+  },
 ];
+
+onMounted(async () => {
+  window.setTimeout(() => {
+    isVisible.value = true;
+  }, 120);
+
+  await nextTick();
+  handleScroll();
+  initAosFallback();
+  window.addEventListener("scroll", handleScroll, { passive: true });
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+  aosObserver?.disconnect();
+});
+
+function handleScroll() {
+  isScrolled.value = window.scrollY > 24;
+
+  if (window.scrollY < 160) {
+    activeSection.value = "home";
+    return;
+  }
+
+  const isNearBottom =
+    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+
+  if (isNearBottom) {
+    activeSection.value = "contact";
+    return;
+  }
+
+  const activationLine = Math.min(window.innerHeight * 0.38, 320);
+  const current = sectionIds
+    .map((id) => {
+      const element = document.getElementById(id);
+
+      return element
+        ? {
+            id,
+            top: element.getBoundingClientRect().top,
+            bottom: element.getBoundingClientRect().bottom,
+          }
+        : null;
+    })
+    .filter(Boolean)
+    .find((section) => {
+      return section!.top <= activationLine && section!.bottom > activationLine;
+    });
+
+  activeSection.value = current?.id ?? activeSection.value;
+}
+
+function navigateToCheck() {
+  mobileMenuOpen.value = false;
+  router.push("/check");
+}
+
+function handleNavClick() {
+  mobileMenuOpen.value = false;
+}
+
+function navItemClass(item: (typeof navItems)[number]) {
+  const isActive = activeSection.value === item.id;
+
+  return [
+    "rounded-full px-4 py-2 text-sm font-medium transition",
+    isActive
+      ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/15 dark:bg-emerald-400 dark:text-emerald-950"
+      : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white",
+  ];
+}
+
+function mobileNavItemClass(item: (typeof navItems)[number]) {
+  const isActive = activeSection.value === item.id;
+
+  return [
+    "block rounded-2xl px-4 py-3 text-sm font-medium transition",
+    isActive
+      ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-400 dark:text-emerald-950"
+      : "text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10",
+  ];
+}
+
+function initAosFallback() {
+  const elements = document.querySelectorAll<HTMLElement>("[data-aos]");
+
+  elements.forEach((element) => {
+    const delay = element.dataset.aosDelay;
+    const duration = element.dataset.aosDuration;
+
+    if (delay) {
+      element.style.transitionDelay = `${delay}ms`;
+    }
+
+    if (duration) {
+      element.style.transitionDuration = `${duration}ms`;
+    }
+  });
+
+  const revealVisibleElements = () => {
+    elements.forEach((element) => {
+      const rect = element.getBoundingClientRect();
+      const isVisibleNow = rect.top < window.innerHeight * 0.92 && rect.bottom > 0;
+
+      if (isVisibleNow) {
+        element.classList.add("aos-animate");
+        aosObserver?.unobserve(element);
+      }
+    });
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    elements.forEach((element) => element.classList.add("aos-animate"));
+    return;
+  }
+
+  aosObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("aos-animate");
+          aosObserver?.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.14,
+      rootMargin: "0px 0px -8% 0px",
+    },
+  );
+
+  elements.forEach((element) => aosObserver?.observe(element));
+  requestAnimationFrame(revealVisibleElements);
+  window.setTimeout(revealVisibleElements, 160);
+}
 </script>
 
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden"
+    class="min-h-screen overflow-hidden bg-transparent text-slate-950 antialiased dark:text-white"
   >
-    <!-- Animated Background Elements -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="pointer-events-none fixed inset-0 -z-10">
       <div
-        class="absolute top-20 -left-20 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"
-      ></div>
+        class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_80%_10%,rgba(20,184,166,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.84),rgba(240,253,244,0.9))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_80%_10%,rgba(45,212,191,0.14),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(6,30,24,0.94))]"
+      />
       <div
-        class="absolute bottom-20 -right-20 w-96 h-96 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse"
-        style="animation-delay: 1s"
-      ></div>
+        class="absolute left-1/2 top-0 h-[34rem] w-[34rem] -translate-x-1/2 rounded-full bg-emerald-500/14 blur-3xl dark:bg-emerald-400/12"
+      />
       <div
-        class="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse"
-        style="animation-delay: 2s"
-      ></div>
+        class="absolute bottom-0 right-0 h-[28rem] w-[28rem] rounded-full bg-teal-500/12 blur-3xl dark:bg-teal-400/10"
+      />
     </div>
 
-    <!-- Floating Navbar -->
-    <div
-      class="fixed top-0 left-0 right-0 z-50 pt-6 px-4 md:px-8 transition-all duration-300"
-      :class="{ 'pt-0': isScrolled }"
-    >
+    <header class="fixed inset-x-0 top-0 z-50 px-4 pt-4 transition-all duration-300 md:px-8">
       <nav
-        class="mx-auto transition-all duration-300 rounded-2xl border backdrop-blur-xl"
-        :class="[
+        class="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border px-4 py-3 backdrop-blur-2xl transition-all duration-300 md:px-5"
+        :class="
           isScrolled
-            ? 'w-full border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 shadow-lg'
-            : 'w-[90%] border-slate-200/50 dark:border-slate-800/50 bg-white/70 dark:bg-slate-950/70 shadow-xl shadow-blue-500/10',
-        ]"
+            ? 'border-slate-200/80 bg-white/90 shadow-xl shadow-slate-900/5 dark:border-white/10 dark:bg-slate-950/90'
+            : 'border-white/70 bg-white/60 shadow-lg shadow-slate-900/5 dark:border-white/10 dark:bg-slate-950/60'
+        "
       >
-        <div class="px-6 py-4">
-          <div class="flex items-center justify-between">
-            <!-- Logo -->
-            <div class="flex items-center space-x-3">
-              <div
-                class="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl"
-              >
-                <GraduationCap class="h-6 w-6 text-white" />
-              </div>
-              <div class="hidden md:block">
-                <h1
-                  class="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-                >
-                  Tracer Study
-                </h1>
-                <p class="text-xs text-muted-foreground">UII Dalwa</p>
-              </div>
-            </div>
-
-            <!-- Desktop Menu -->
-            <div class="hidden md:flex items-center space-x-6">
-              <router-link
-                to="/public/questionnaires"
-                class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Questionnaires
-              </router-link>
-              <a
-                href="#features"
-                class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#about"
-                class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                About
-              </a>
-              <a
-                href="#contact"
-                class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                Contact
-              </a>
-            </div>
-
-            <!-- CTA Buttons -->
-            <div class="hidden md:flex items-center space-x-3">
-              <Button variant="ghost" size="sm" @click="router.push('/check')">
-                Login
-              </Button>
-              <Button
-                size="sm"
-                class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md"
-                @click="router.push('/check')"
-              >
-                <Sparkles class="mr-2 h-4 w-4" />
-                Get Started
-              </Button>
-            </div>
-
-            <!-- Mobile Menu Button -->
-            <button
-              class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              @click="mobileMenuOpen = !mobileMenuOpen"
-            >
-              <Menu v-if="!mobileMenuOpen" class="h-6 w-6" />
-              <X v-else class="h-6 w-6" />
-            </button>
-          </div>
-
-          <!-- Mobile Menu -->
-          <div
-            v-if="mobileMenuOpen"
-            class="md:hidden mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 space-y-3"
+        <button class="flex items-center gap-3 text-left" @click="router.push('/')">
+          <span
+            class="grid h-12 w-12 place-items-center rounded-2xl border border-emerald-200/70 bg-white p-2 shadow-lg shadow-emerald-900/10 dark:border-emerald-400/20 dark:bg-white/95"
           >
-            <router-link
-              to="/public/questionnaires"
-              class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Questionnaires
-            </router-link>
-            <a
-              href="#features"
-              class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="#about"
-              class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              About
-            </a>
-            <a
-              href="#contact"
-              class="block py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              Contact
-            </a>
-            <div class="pt-3 space-y-2">
-              <Button
-                variant="outline"
-                class="w-full justify-center"
-                size="sm"
-                @click="router.push('/check')"
-              >
-                Login
-              </Button>
-              <Button
-                class="w-full justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                size="sm"
-                @click="router.push('/check')"
-              >
-                <Sparkles class="mr-2 h-4 w-4" />
-                Get Started
-              </Button>
-            </div>
-          </div>
+            <img :src="logoImage" alt="UII Dalwa" class="h-8 w-auto object-contain" />
+          </span>
+          <span class="hidden sm:block">
+            <span class="block text-sm font-bold tracking-tight">Tracer Study</span>
+            <span class="block text-xs text-emerald-700 dark:text-emerald-300">UII Dalwa</span>
+          </span>
+        </button>
+
+        <div class="hidden items-center gap-1 rounded-full border border-slate-200/80 bg-white/60 p-1 dark:border-white/10 dark:bg-white/5 md:flex">
+          <a
+            v-for="item in navItems"
+            :key="item.label"
+            :href="item.href"
+            :class="navItemClass(item)"
+          >
+            {{ item.label }}
+          </a>
+        </div>
+
+        <div class="hidden items-center gap-2 md:flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="rounded-2xl"
+            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+            @click="toggleTheme"
+          >
+            <Sun v-if="isDark" class="h-5 w-5" />
+            <Moon v-else class="h-5 w-5" />
+          </Button>
+          <router-link
+            to="/public/questionnaires"
+            class="rounded-2xl px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-emerald-300"
+          >
+            Kuesioner
+          </router-link>
+          <Button
+            class="rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-700/20 hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300"
+            @click="navigateToCheck"
+          >
+            Login
+            <ArrowRight class="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+
+        <div class="flex items-center gap-1 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="rounded-2xl"
+            :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+            @click="toggleTheme"
+          >
+            <Sun v-if="isDark" class="h-5 w-5" />
+            <Moon v-else class="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="rounded-2xl"
+            aria-label="Toggle navigation menu"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <X v-if="mobileMenuOpen" class="h-5 w-5" />
+            <Menu v-else class="h-5 w-5" />
+          </Button>
         </div>
       </nav>
-    </div>
 
-    <!-- Hero Section -->
-    <section class="relative z-10 pt-32 md:pt-40 pb-20 md:pb-32">
-      <div class="container mx-auto px-6">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-          <!-- Left Content -->
-          <div class="space-y-8" :class="{ 'animate-fade-in-up': isVisible }">
+      <div
+        v-if="mobileMenuOpen"
+        class="mx-auto mt-3 max-w-7xl rounded-3xl border border-slate-200/80 bg-white/90 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:hidden"
+      >
+        <a
+          v-for="item in navItems"
+          :key="item.label"
+          :href="item.href"
+          :class="mobileNavItemClass(item)"
+          @click="handleNavClick"
+        >
+          {{ item.label }}
+        </a>
+        <div class="mt-2 grid gap-2 border-t border-slate-200/80 pt-3 dark:border-white/10">
+          <router-link
+            to="/public/questionnaires"
+            class="block rounded-2xl px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-white/10"
+            @click="mobileMenuOpen = false"
+          >
+            Kuesioner
+          </router-link>
+          <Button class="w-full rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-400 dark:text-emerald-950 dark:hover:bg-emerald-300" @click="navigateToCheck">
+            Login
+          </Button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="home" class="relative scroll-mt-32 px-4 pb-20 pt-32 md:px-8 md:pb-28 md:pt-40">
+        <div class="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.02fr_0.98fr]">
+          <div
+            class="max-w-3xl space-y-8"
+            :class="{ 'animate-fade-in-up': isVisible }"
+          >
             <div
-              class="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-200 dark:border-blue-800 rounded-full px-4 py-2"
+              class="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/80 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200"
+              data-aos="zoom-in"
+              data-aos-delay="80"
             >
-              <Sparkles class="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <span
-                class="text-sm font-medium text-blue-600 dark:text-blue-400"
-              >
-                Integrated Tracer Study Platform
-              </span>
+              <Sparkles class="h-4 w-4" />
+              Platform tracer study modern untuk institusi
             </div>
 
-            <h1 class="text-4xl md:text-6xl font-bold leading-tight">
-              <span
-                class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient"
+            <div class="space-y-5">
+              <h1
+                class="text-5xl font-black tracking-tight text-slate-950 dark:text-white md:text-7xl"
+                data-aos="fade-up"
+                data-aos-delay="140"
               >
-                Track Alumni Success
-              </span>
-              <br />
-              <span class="text-slate-900 dark:text-white"
-                >For Better Future</span
+                Kelola tracer study dengan data yang
+                <span class="block bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 bg-clip-text text-transparent dark:from-emerald-300 dark:via-teal-300 dark:to-lime-300">
+                  jelas, cepat, elegan.
+                </span>
+              </h1>
+              <p
+                class="max-w-2xl text-lg leading-8 text-slate-600 dark:text-slate-300 md:text-xl"
+                data-aos="fade-up"
+                data-aos-delay="220"
               >
-            </h1>
+                Sistem terpadu untuk mengumpulkan data alumni, memantau survey,
+                membaca insight, dan menyiapkan laporan institusi dengan tampilan
+                yang nyaman di mode terang maupun gelap.
+              </p>
+            </div>
 
-            <p
-              class="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed"
-            >
-              Advanced platform for Universitas Islam Internasional Darullughah
-              Wadda'wah to manage tracer studies, collect alumni data, and
-              generate meaningful insights for institutional excellence.
-            </p>
-
-            <div class="flex flex-wrap gap-4">
+            <div class="flex flex-col gap-3 sm:flex-row" data-aos="fade-up" data-aos-delay="300">
               <Button
                 size="lg"
-                class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl shadow-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300"
-                @click="router.push('/check')"
+                class="h-12 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 text-white shadow-xl shadow-emerald-700/25 hover:from-emerald-700 hover:to-teal-700 dark:from-emerald-400 dark:to-teal-400 dark:text-emerald-950 dark:hover:from-emerald-300 dark:hover:to-teal-300"
+                @click="navigateToCheck"
               >
                 <Target class="mr-2 h-5 w-5" />
-                Start Now
+                Mulai Sekarang
                 <ArrowRight class="ml-2 h-5 w-5" />
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                class="border-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                class="h-12 rounded-2xl border-slate-300/80 bg-white/70 px-7 backdrop-blur hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                as-child
               >
-                Learn More
+                <a href="#features">Lihat Fitur</a>
               </Button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-4 sm:grid-cols-4">
+              <div
+                v-for="(stat, index) in stats"
+                :key="stat.label"
+                class="rounded-3xl border border-white/80 bg-white/72 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]"
+                :style="{ animationDelay: `${0.2 + index * 0.08}s` }"
+                :class="{ 'animate-fade-in-up': isVisible }"
+                data-aos="fade-up"
+                :data-aos-delay="360 + index * 80"
+              >
+                <component :is="stat.icon" class="mb-3 h-5 w-5 text-emerald-600 dark:text-emerald-300" />
+                <div class="text-2xl font-black tracking-tight">{{ stat.number }}</div>
+                <div class="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  {{ stat.label }}
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Right Image -->
           <div
             class="relative"
             :class="{ 'animate-fade-in-up': isVisible }"
-            style="animation-delay: 0.2s"
+            style="animation-delay: 0.16s"
           >
+            <div class="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-emerald-600/24 via-teal-600/18 to-lime-500/16 blur-2xl" />
             <div
-              class="relative rounded-3xl overflow-hidden shadow-2xl shadow-blue-500/20"
+              class="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/76 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/30"
             >
-              <img
-                :src="heroImage"
-                alt="Islamic Alumni Success Illustration"
-                class="w-full h-auto"
-              />
+              <div class="overflow-hidden rounded-[1.5rem] bg-slate-100 dark:bg-slate-900">
+                <img
+                  :src="heroImage"
+                  alt="Tracer study dashboard illustration"
+                  class="h-full w-full object-cover"
+                />
+              </div>
               <div
-                class="absolute inset-0 bg-gradient-to-t from-blue-600/20 to-transparent"
-              ></div>
+                class="absolute left-6 top-6 rounded-2xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-300">
+                    <CheckCircle2 class="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p class="text-sm font-bold">Survey tervalidasi</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Data siap dianalisis</p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="absolute bottom-6 right-6 rounded-2xl border border-white/70 bg-slate-950/90 p-4 text-white shadow-xl shadow-slate-900/20 backdrop-blur-xl dark:border-white/10"
+              >
+                <div class="flex items-center gap-3">
+                  <LineChart class="h-9 w-9 text-emerald-300" />
+                  <div>
+                    <p class="text-xl font-black">+28%</p>
+                    <p class="text-xs text-slate-300">engagement alumni</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <!-- Floating elements -->
-            <div
-              class="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-20 blur-2xl animate-pulse"
-            ></div>
-            <div
-              class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl opacity-20 blur-2xl animate-pulse"
-              style="animation-delay: 1s"
-            ></div>
           </div>
         </div>
+      </section>
 
-        <!-- Stats Cards -->
-        <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <section id="features" class="relative scroll-mt-32 px-4 py-20 md:px-8">
+        <div class="mx-auto max-w-7xl">
           <div
-            v-for="(stat, index) in stats"
-            :key="index"
-            class="group relative p-4 md:p-6 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 hover:-translate-y-2"
-            :style="{ animationDelay: `${0.4 + index * 0.1}s` }"
-            :class="{ 'animate-fade-in-up': isVisible }"
+            class="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end"
+            data-aos="fade-up"
           >
-            <div
-              class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            ></div>
-            <div class="relative">
-              <component
-                :is="stat.icon"
-                class="h-6 w-6 md:h-8 md:w-8 mb-2 md:mb-3 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300"
-              />
-              <div
-                class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-              >
-                {{ stat.number }}
+            <div class="max-w-2xl">
+              <p class="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-300">
+                Fitur utama
+              </p>
+              <h2 class="text-4xl font-black tracking-tight md:text-5xl">
+                Dibangun untuk operasional tracer study yang rapi.
+              </h2>
+            </div>
+            <p class="max-w-md text-slate-600 dark:text-slate-300">
+              Dari pengumpulan data sampai laporan, setiap bagian dibuat fokus
+              pada kejelasan informasi dan kemudahan kerja admin.
+            </p>
+          </div>
+
+          <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <article
+              v-for="(feature, index) in features"
+              :key="feature.title"
+              class="group overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/78 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-600/10 dark:border-white/10 dark:bg-white/[0.06]"
+              data-aos="fade-up"
+              :data-aos-delay="index * 90"
+            >
+              <div class="relative h-44 overflow-hidden">
+                <img
+                  :src="feature.image"
+                  :alt="feature.title"
+                  class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+                <div class="absolute bottom-4 left-4 grid h-12 w-12 place-items-center rounded-2xl bg-white text-emerald-600 shadow-lg dark:bg-slate-950 dark:text-emerald-300">
+                  <component :is="feature.icon" class="h-6 w-6" />
+                </div>
               </div>
+              <div class="p-6">
+                <h3 class="text-xl font-black">{{ feature.title }}</h3>
+                <p class="mt-3 leading-7 text-slate-600 dark:text-slate-300">
+                  {{ feature.description }}
+                </p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="process" class="scroll-mt-32 px-4 py-20 md:px-8">
+        <div
+          class="mx-auto max-w-7xl rounded-[2.5rem] border border-slate-200/80 bg-white/72 p-6 shadow-2xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] md:p-10"
+          data-aos="fade-up"
+        >
+          <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <div data-aos="fade-right" data-aos-delay="120">
+              <p class="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-teal-600 dark:text-teal-300">
+                Alur kerja
+              </p>
+              <h2 class="text-4xl font-black tracking-tight md:text-5xl">
+                Sederhana untuk alumni, kuat untuk institusi.
+              </h2>
+              <p class="mt-5 leading-8 text-slate-600 dark:text-slate-300">
+                Landing page ini mengarahkan pengguna ke portal yang tepat,
+                sementara proses internal tetap mudah diaudit dan siap menjadi
+                dasar keputusan kampus.
+              </p>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-3">
               <div
-                class="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1"
+                v-for="(item, index) in processSteps"
+                :key="item.step"
+                class="rounded-3xl border border-slate-200/80 bg-slate-50/80 p-5 dark:border-white/10 dark:bg-slate-950/50"
+                data-aos="zoom-in"
+                :data-aos-delay="180 + index * 100"
               >
-                {{ stat.label }}
+                <div class="mb-5 flex items-center justify-between">
+                  <span class="text-sm font-black text-slate-400">{{ item.step }}</span>
+                  <span class="grid h-11 w-11 place-items-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 dark:bg-emerald-400 dark:text-emerald-950">
+                    <component :is="item.icon" class="h-5 w-5" />
+                  </span>
+                </div>
+                <h3 class="text-lg font-black">{{ item.title }}</h3>
+                <p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  {{ item.description }}
+                </p>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Features Section -->
-    <section
-      id="features"
-      class="relative z-10 py-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl"
+      <section class="px-4 py-20 md:px-8">
+        <div
+          class="relative mx-auto max-w-5xl overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-emerald-950 via-slate-950 to-teal-950 px-6 py-14 text-center text-white shadow-2xl shadow-emerald-950/25 md:px-16 md:py-20"
+          data-aos="zoom-in"
+          data-aos-duration="760"
+        >
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(52,211,153,0.3),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.24),transparent_34%)]" />
+          <div class="relative mx-auto max-w-3xl">
+            <div class="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20">
+              <GraduationCap class="h-7 w-7" />
+            </div>
+            <h2 class="text-4xl font-black tracking-tight md:text-5xl">
+              Siap mengelola data alumni dengan lebih profesional?
+            </h2>
+            <p class="mx-auto mt-5 max-w-2xl text-lg leading-8 text-emerald-100">
+              Akses platform tracer study dan mulai kelola survey, alumni, dan
+              laporan institusi dalam satu sistem.
+            </p>
+            <Button
+              size="lg"
+              class="mt-8 rounded-2xl bg-white px-8 text-emerald-950 hover:bg-emerald-50"
+              @click="navigateToCheck"
+            >
+              Masuk Platform
+              <ArrowRight class="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer
+      id="contact"
+      class="scroll-mt-32 border-t border-slate-200/80 bg-white/72 px-4 py-12 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 md:px-8"
+      data-aos="fade-up"
     >
-      <div class="container mx-auto px-6">
-        <div class="text-center max-w-3xl mx-auto mb-16">
-          <h2 class="text-3xl md:text-5xl font-bold mb-4">
-            <span
-              class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-            >
-              Key Features
+      <div class="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="grid h-11 w-11 place-items-center rounded-2xl border border-emerald-200/70 bg-white p-2 shadow-sm dark:border-emerald-400/20">
+              <img :src="logoImage" alt="UII Dalwa" class="h-7 w-auto object-contain" />
             </span>
-          </h2>
-          <p class="text-base md:text-lg text-slate-600 dark:text-slate-400">
-            Complete solutions for effective and efficient tracer study
-            management
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div
-            v-for="(feature, index) in features"
-            :key="index"
-            class="group relative rounded-3xl bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 overflow-hidden"
-          >
-            <!-- Feature Image -->
-            <div class="relative h-48 overflow-hidden">
-              <img
-                :src="feature.image"
-                :alt="feature.title"
-                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-              />
-              <div
-                class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"
-              ></div>
-            </div>
-
-            <!-- Content -->
-            <div class="p-6 md:p-8">
-              <div
-                class="relative mb-6 w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all duration-500"
-                :class="feature.gradient"
-              >
-                <component :is="feature.icon" class="h-8 w-8 text-white" />
-              </div>
-
-              <h3
-                class="relative text-xl font-bold mb-3 text-slate-900 dark:text-white"
-              >
-                {{ feature.title }}
-              </h3>
-              <p
-                class="relative text-slate-600 dark:text-slate-400 leading-relaxed"
-              >
-                {{ feature.description }}
+            <div>
+              <h3 class="font-black">Tracer Study UII Dalwa</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400">
+                Alumni insight platform
               </p>
             </div>
           </div>
+          <p class="mt-5 max-w-md leading-7 text-slate-600 dark:text-slate-300">
+            Platform modern untuk pengelolaan tracer study, survey alumni, dan
+            pelaporan institusi Universitas Islam Internasional Darullughah Wadda'wah.
+          </p>
         </div>
-      </div>
-    </section>
 
-    <!-- About Section -->
-    <section id="about" class="relative z-10 py-20">
-      <div class="container mx-auto px-6">
-        <div class="max-w-4xl mx-auto text-center space-y-6">
-          <h2 class="text-3xl md:text-4xl font-bold">
-            <span
-              class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+        <div>
+          <h4 class="font-black">Kontak</h4>
+          <div class="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+            <p class="flex gap-2">
+              <ShieldCheck class="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+              Universitas Islam Internasional Darullughah Wadda'wah
+            </p>
+            <p class="flex gap-2">
+              <Target class="mt-0.5 h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+              Raci, Bangil, Indonesia
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-black">Akses Cepat</h4>
+          <div class="mt-4 space-y-3 text-sm">
+            <router-link
+              to="/public/questionnaires"
+              class="block text-slate-600 transition hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-300"
             >
-              About UII Dalwa
-            </span>
-          </h2>
-          <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
-            Universitas Islam Internasional Darullughah Wadda'wah (UII Dalwa) is
-            dedicated to excellence in Islamic education and research. Our
-            tracer study system helps us maintain strong connections with our
-            alumni and continuously improve our educational programs based on
-            real-world outcomes.
-          </p>
-          <p class="text-base text-slate-600 dark:text-slate-400">
-            Through this platform, we track our graduates' career progression,
-            gather valuable feedback, and ensure that our curriculum remains
-            relevant to the needs of the modern Islamic world.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="relative z-10 py-20">
-      <div class="container mx-auto px-6">
-        <div
-          class="relative max-w-4xl mx-auto p-8 md:p-16 rounded-3xl bg-gradient-to-r from-blue-600 to-purple-600 overflow-hidden"
-        >
-          <!-- Animated background patterns -->
-          <div class="absolute inset-0 opacity-20">
-            <div
-              class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl animate-pulse"
-            ></div>
-            <div
-              class="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"
-              style="animation-delay: 1s"
-            ></div>
-          </div>
-
-          <div class="relative text-center text-white space-y-6">
-            <h2 class="text-3xl md:text-5xl font-bold">
-              Ready to Get Started?
-            </h2>
-            <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
-              Join leading institutions that have been using our platform for
-              better tracer studies and alumni engagement.
-            </p>
-            <div class="flex flex-wrap justify-center gap-4 pt-4">
-              <Button
-                size="lg"
-                class="bg-white text-blue-600 hover:bg-blue-50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                @click="router.push('/check')"
-              >
-                <GraduationCap class="mr-2 h-5 w-5" />
-                Access Platform
-                <ArrowRight class="ml-2 h-5 w-5" />
-              </Button>
-            </div>
+              Kuesioner Publik
+            </router-link>
+            <a
+              href="#features"
+              class="block text-slate-600 transition hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-300"
+            >
+              Fitur
+            </a>
+            <button
+              class="block text-left text-slate-600 transition hover:text-emerald-600 dark:text-slate-300 dark:hover:text-emerald-300"
+              @click="navigateToCheck"
+            >
+              Login
+            </button>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- Footer -->
-    <footer
-      id="contact"
-      class="relative z-10 border-t border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl"
-    >
-      <div class="container mx-auto px-6 py-12">
-        <div class="grid md:grid-cols-3 gap-8">
-          <div>
-            <div class="flex items-center space-x-2 mb-4">
-              <div
-                class="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl"
-              >
-                <GraduationCap class="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3
-                  class="font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-                >
-                  Tracer Study
-                </h3>
-                <p class="text-xs text-muted-foreground">UII Dalwa</p>
-              </div>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">
-              Modern platform to manage tracer studies and monitor alumni
-              success for institutional excellence.
-            </p>
-          </div>
-          <div>
-            <h4 class="font-semibold mb-4 text-slate-900 dark:text-white">
-              Contact
-            </h4>
-            <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-              <p>Universitas Islam Internasional</p>
-              <p>Darullughah Wadda'wah</p>
-              <p>Raci, Bangil, Indonesia</p>
-            </div>
-          </div>
-          <div>
-            <h4 class="font-semibold mb-4 text-slate-900 dark:text-white">
-              Quick Links
-            </h4>
-            <div class="space-y-2 text-sm">
-              <div>
-                <a
-                  href="#about"
-                  class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                  About Us
-                </a>
-              </div>
-              <div>
-                <a
-                  href="#contact"
-                  class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                >
-                  Contact
-                </a>
-              </div>
-              <div>
-                <a
-                  href="#"
-                  class="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  @click.prevent="router.push('/check')"
-                >
-                  Login
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div
-          class="border-t border-slate-200 dark:border-slate-800 mt-8 pt-8 text-center text-sm text-slate-600 dark:text-slate-400"
-        >
-          <p>&copy; 2025 Tracer Study UII Dalwa. All rights reserved.</p>
-        </div>
+      <div class="mx-auto mt-10 max-w-7xl border-t border-slate-200/80 pt-6 text-sm text-slate-500 dark:border-white/10 dark:text-slate-400">
+        © 2026 Tracer Study UII Dalwa. All rights reserved.
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
+:global(html) {
+  scroll-behavior: smooth;
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -582,21 +701,46 @@ const stats = [
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
+  animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes gradient {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+[data-aos] {
+  opacity: 0;
+  filter: blur(4px);
+  transition-property: opacity, transform, filter;
+  transition-duration: 720ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
 }
 
-.animate-gradient {
-  background-size: 200% auto;
-  animation: gradient 3s ease infinite;
+[data-aos="fade-up"] {
+  transform: translate3d(0, 18px, 0);
+}
+
+[data-aos="fade-right"] {
+  transform: translate3d(-18px, 0, 0);
+}
+
+[data-aos="fade-left"] {
+  transform: translate3d(18px, 0, 0);
+}
+
+[data-aos="zoom-in"] {
+  transform: scale(0.97);
+}
+
+[data-aos].aos-animate {
+  opacity: 1;
+  filter: blur(0);
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-aos] {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+  }
 }
 </style>

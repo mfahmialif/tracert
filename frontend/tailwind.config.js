@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
-  darkMode: ["class", "class"], // Enable class-based dark mode
+  darkMode: "class", // Enable class-based dark mode via html.dark
   theme: {
     extend: {
       fontFamily: {

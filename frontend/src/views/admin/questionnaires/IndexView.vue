@@ -36,6 +36,8 @@ import {
   ChevronsRight,
   Search,
   BarChart2,
+  ClipboardList,
+  Sparkles,
 } from "lucide-vue-next";
 import {
   DropdownMenu,
@@ -189,32 +191,44 @@ async function handleDelete() {
 
 <template>
   <AdminLayout>
-    <div
-      class="flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between"
-    >
-      <div>
-        <h1 class="text-3xl font-bold tracking-tight">Manajemen Kuesioner</h1>
-        <p class="text-muted-foreground">
-          Buat dan kelola kuesioner tracer study
-        </p>
+    <div class="overflow-hidden rounded-[2rem] border border-white/80 bg-white/[0.72] p-6 shadow-xl shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.055] md:p-8">
+      <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="mb-3 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
+            <ClipboardList class="mr-2 h-3.5 w-3.5" />
+            Kuesioner
+          </p>
+          <h1 class="text-3xl font-black tracking-tight md:text-4xl">Manajemen Kuesioner</h1>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+            Buat, atur, dan pantau kuesioner tracer study dengan tampilan yang lebih rapi.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/80 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
+          <Sparkles class="h-5 w-5" />
+          {{ pagination.total }} data kuesioner
+        </div>
       </div>
-      <div class="flex flex-col gap-2 md:flex-row md:items-center">
+    </div>
+
+    <div class="rounded-[1.75rem] border border-white/80 bg-white/[0.62] p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.045]">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <!-- Search -->
-        <div class="relative w-full md:w-[200px] lg:w-[300px]">
+        <div class="relative w-full md:max-w-[360px]">
           <Search
-            class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground"
+            class="absolute left-4 top-3.5 h-4 w-4 text-slate-400"
           />
           <Input
             placeholder="Cari kuesioner..."
             v-model="search"
-            class="pl-8 h-9"
+            class="h-12 rounded-2xl bg-white/80 pl-11 dark:bg-slate-950/50"
           />
         </div>
 
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
         <!-- Sort Dropdown -->
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="outline" class="h-9 justify-between md:w-[160px]">
+            <Button variant="outline" class="h-12 justify-between rounded-2xl bg-white/70 md:w-[170px] dark:bg-slate-950/40">
               <span class="flex items-center">
                 <ArrowUpDown class="mr-2 h-4 w-4" />
                 <span class="truncate">{{ currentSortLabel }}</span>
@@ -245,7 +259,7 @@ async function handleDelete() {
           :model-value="pagination.per_page.toString()"
           @update:model-value="handleLimitChange"
         >
-          <SelectTrigger class="h-9 w-[70px] w-100">
+          <SelectTrigger class="h-12 w-[86px] rounded-2xl bg-white/70 dark:bg-slate-950/40">
             <SelectValue :placeholder="pagination.per_page.toString()" />
           </SelectTrigger>
           <SelectContent>
@@ -261,13 +275,14 @@ async function handleDelete() {
 
         <!-- Create Button -->
         <Button
-          class="h-9"
+          class="h-12 rounded-2xl bg-emerald-600 px-5 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700"
           @click="router.push('/admin/questionnaires/create')"
         >
           <Plus class="mr-2 h-4 w-4" />
           <span class="hidden md:inline">Buat Baru</span>
           <span class="md:hidden">Baru</span>
         </Button>
+        </div>
       </div>
     </div>
 
@@ -293,32 +308,32 @@ async function handleDelete() {
       <Card
         v-for="q in questionnaires"
         :key="q.id"
-        class="flex flex-col transition-all hover:shadow-lg"
+        class="group flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-900/10 dark:hover:border-emerald-400/20"
       >
         <CardHeader>
           <div class="flex justify-between items-start">
-            <Badge variant="outline">{{ q.year?.name || q.year_id }}</Badge>
+            <Badge variant="outline" class="rounded-full border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">{{ q.year?.name || q.year_id }}</Badge>
             <Badge
               :variant="q.is_active ? 'default' : 'secondary'"
-              :class="q.is_active ? 'bg-green-600 hover:bg-green-700' : ''"
+              :class="q.is_active ? 'rounded-full bg-emerald-600 hover:bg-emerald-700' : 'rounded-full'"
             >
               {{ q.is_active ? "Aktif" : "Draft" }}
             </Badge>
           </div>
-          <CardTitle class="mt-2 line-clamp-1">{{ q.title }}</CardTitle>
-          <CardDescription class="line-clamp-2 h-10">{{
+          <CardTitle class="mt-2 line-clamp-1 text-xl font-black">{{ q.title }}</CardTitle>
+          <CardDescription class="line-clamp-2 h-10 leading-6">{{
             q.description
           }}</CardDescription>
         </CardHeader>
-        <CardContent class="flex-1 text-sm text-muted-foreground">
-          <div class="flex flex-col gap-1 py-1">
-            <span>Target Prodi:</span>
+        <CardContent class="flex-1 text-sm text-slate-600 dark:text-slate-300">
+          <div class="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-white/10 dark:bg-slate-950/30">
+            <span class="font-bold text-slate-900 dark:text-white">Target Prodi</span>
             <div class="flex flex-wrap gap-1">
               <Badge
                 v-for="prodi in q.prodis.slice(0, 3)"
                 :key="prodi.id"
                 variant="secondary"
-                class="text-xs"
+                class="rounded-full text-xs"
               >
                 {{ prodi.name }}
               </Badge>
@@ -336,40 +351,42 @@ async function handleDelete() {
               </span>
             </div>
           </div>
-          <div class="flex justify-between py-1">
+          <div class="mt-4 grid gap-2">
+          <div class="flex justify-between rounded-2xl bg-white/55 px-3 py-2 dark:bg-white/[0.04]">
             <span>Wajib:</span>
             <Badge
               :variant="q.is_mandatory ? 'destructive' : 'secondary'"
-              class="font-normal"
+              class="rounded-full font-normal"
             >
               {{ q.is_mandatory ? "Wajib" : "Tidak Wajib" }}
             </Badge>
           </div>
-          <div class="flex justify-between py-1">
+          <div class="flex justify-between rounded-2xl bg-white/55 px-3 py-2 dark:bg-white/[0.04]">
             <span>Publik:</span>
             <Badge
               :variant="q.is_public ? 'destructive' : 'secondary'"
-              class="font-normal"
+              class="rounded-full font-normal"
             >
               {{ q.is_public ? "Publik" : "Tidak Publik" }}
             </Badge>
           </div>
-          <div class="flex justify-between py-1">
+          <div class="flex justify-between rounded-2xl bg-white/55 px-3 py-2 dark:bg-white/[0.04]">
             <span>Pertanyaan:</span>
             <span class="font-medium">{{ q.questions_count || 0 }}</span>
           </div>
+          </div>
         </CardContent>
-        <CardFooter class="flex gap-2">
+        <CardFooter class="flex gap-2 border-t border-slate-200/70 pt-4 dark:border-white/10">
           <Button
             variant="secondary"
-            class="flex-1"
+            class="flex-1 rounded-2xl"
             @click="router.push(`/admin/questionnaires/${q.id}/results`)"
           >
             <BarChart2 class="mr-2 h-4 w-4" /> Hasil
           </Button>
           <Button
             variant="outline"
-            class="flex-1"
+            class="flex-1 rounded-2xl bg-white/70 dark:bg-slate-950/40"
             @click="router.push(`/admin/questionnaires/${q.id}/edit`)"
           >
             <Edit class="mr-2 h-4 w-4" /> Edit
@@ -379,6 +396,7 @@ async function handleDelete() {
               <Button
                 variant="destructive"
                 size="icon"
+                class="rounded-2xl"
                 @click="deleteId = q.id"
               >
                 <Trash2 class="h-4 w-4" />
