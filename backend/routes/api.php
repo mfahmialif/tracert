@@ -1,20 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\QuestionnaireController;
 use App\Http\Controllers\Api\AlumniController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
-
-use App\Http\Controllers\Api\ProdiController;
-use App\Http\Controllers\Api\YearController;
-use App\Http\Controllers\Api\QuestionnaireTypeController;
-use App\Http\Controllers\Api\QuestionnaireManagementController;
-use App\Http\Controllers\Api\QuestionManagementController;
 use App\Http\Controllers\Api\FacultyController;
+use App\Http\Controllers\Api\GeneratedResponseController;
+use App\Http\Controllers\Api\ProdiController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicQuestionnaireController;
-
+use App\Http\Controllers\Api\QuestionManagementController;
+use App\Http\Controllers\Api\QuestionnaireController;
+use App\Http\Controllers\Api\QuestionnaireManagementController;
+use App\Http\Controllers\Api\QuestionnaireTypeController;
+use App\Http\Controllers\Api\UserManagementController;
+use App\Http\Controllers\Api\YearController;
+use Illuminate\Support\Facades\Route;
 
 // Public Questionnaires (no auth required)
 Route::prefix('public')->group(function () {
@@ -61,7 +61,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::put('/alumni/{id}', [AlumniController::class, 'update']);
         Route::delete('/alumni/{id}', [AlumniController::class, 'destroy']);
 
-
         // Questionnaire Type Management
         Route::get('/questionnaire-types', [QuestionnaireTypeController::class, 'index']);
         Route::post('/questionnaire-types', [QuestionnaireTypeController::class, 'store']);
@@ -79,6 +78,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/questionnaires/{questionnaireId}/questions/{questionId}/respondents', [QuestionnaireManagementController::class, 'questionRespondents']);
         Route::get('/questionnaires/{id}/export/excel', [QuestionnaireManagementController::class, 'exportExcel']);
         Route::get('/questionnaires/{id}/export/pdf', [QuestionnaireManagementController::class, 'exportPdf']);
+        Route::post('/questionnaires/{id}/duplicate', [QuestionnaireManagementController::class, 'duplicate']);
+
+        Route::post('/questionnaires/{questionnaire}/generate-responses', [GeneratedResponseController::class, 'store'])
+            ->middleware('role:superadmin');
+
+        Route::middleware('role:superadmin')->group(function () {
+            Route::get('/users/roles', [UserManagementController::class, 'roles']);
+            Route::apiResource('users', UserManagementController::class)->except('show');
+        });
 
         // Question Management
         Route::post('/questionnaires/{questionnaireId}/questions', [QuestionManagementController::class, 'store']);

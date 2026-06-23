@@ -104,6 +104,10 @@ const columns = [
     header: "Kode",
     cell: (info) => info.getValue(),
   }),
+  columnHelper.accessor("alias", {
+    header: "Alias",
+    cell: (info) => info.getValue() || "-",
+  }),
   columnHelper.accessor("name", {
     header: "Nama Prodi",
     cell: (info) => info.getValue(),
@@ -255,7 +259,7 @@ async function handleDelete(id: number) {
         <Search class="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           v-model="search"
-          placeholder="Cari nama prodi..."
+          placeholder="Cari nama, kode, atau alias..."
           class="h-12 rounded-2xl bg-white/70 pl-8 dark:bg-slate-950/40"
           @input="fetchProdis"
         />

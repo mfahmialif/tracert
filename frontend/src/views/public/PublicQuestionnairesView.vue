@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/composables/useTheme";
+import PublicPageLoader from "./PublicPageLoader.vue";
 import { ArrowRight, FileText, Home, Moon, Sparkles, Sun } from "lucide-vue-next";
 
 const router = useRouter();
@@ -34,6 +35,8 @@ function startSurvey(id: number) {
   <div
     class="min-h-screen overflow-hidden bg-transparent text-slate-950 antialiased dark:text-white"
   >
+    <PublicPageLoader v-if="loading" message="Sedang memuat daftar kuesioner..." />
+
     <div class="pointer-events-none fixed inset-0 -z-10">
       <div
         class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(20,184,166,0.16),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.86),rgba(240,253,244,0.92))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(45,212,191,0.12),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(6,30,24,0.94))]"
@@ -109,14 +112,8 @@ function startSurvey(id: number) {
         </p>
       </div>
 
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-12 w-12 animate-spin rounded-full border-4 border-emerald-100 border-b-emerald-600 dark:border-emerald-950 dark:border-b-emerald-300"
-        ></div>
-      </div>
-
       <div
-        v-else-if="questionnaires.length === 0"
+        v-if="!loading && questionnaires.length === 0"
         class="mx-auto max-w-xl rounded-[2rem] border border-slate-200/80 bg-white/78 p-10 text-center shadow-xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]"
       >
         <div class="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-300">
@@ -128,7 +125,7 @@ function startSurvey(id: number) {
         </p>
       </div>
 
-      <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div v-else-if="!loading" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card
           v-for="q in questionnaires"
           :key="q.id"

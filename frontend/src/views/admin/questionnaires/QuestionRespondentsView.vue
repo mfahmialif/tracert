@@ -34,6 +34,7 @@ const questionnaireTitle = ref("");
 const questionText = ref("");
 const questionType = ref("");
 const totalAnswers = ref(0);
+const questionnaireIsPublic = ref(true);
 const answers = ref<any[]>([]);
 const searchQuery = ref("");
 
@@ -46,6 +47,7 @@ onMounted(async () => {
     questionText.value = data.question_text;
     questionType.value = data.question_type;
     totalAnswers.value = data.total_answers;
+    questionnaireIsPublic.value = data.is_public ?? true;
     answers.value = data.answers;
   } catch (error) {
     console.error("Failed to fetch question respondents", error);
@@ -59,10 +61,20 @@ const filteredAnswers = computed(() => {
 
   const query = searchQuery.value.toLowerCase();
   return answers.value.filter(
-    (a) =>
-      a.nim.toLowerCase().includes(query) ||
-      a.nama.toLowerCase().includes(query) ||
-      a.answer.toLowerCase().includes(query)
+    (a) => {
+      if (questionnaireIsPublic.value) {
+        return (
+          String(a.nim ?? "").toLowerCase().includes(query) ||
+          String(a.nama ?? "").toLowerCase().includes(query) ||
+          String(a.answer ?? "").toLowerCase().includes(query)
+        );
+      }
+
+      return (
+        String(a.answer ?? "").toLowerCase().includes(query) ||
+        String(a.submitted_at ?? "").toLowerCase().includes(query)
+      );
+    }
   );
 });
 
@@ -143,7 +155,11 @@ function handleExport() {
           />
           <Input
             v-model="searchQuery"
-            placeholder="Search by NIM, name, or answer..."
+            :placeholder="
+              questionnaireIsPublic
+                ? 'Search by NIM, name, or answer...'
+                : 'Search by answer or submit time...'
+            "
             class="pl-9"
           />
         </div>
@@ -165,10 +181,18 @@ function handleExport() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead class="w-[120px]">NIM</TableHead>
-                <TableHead class="w-[200px]">Name</TableHead>
-                <TableHead class="w-[180px]">Study Program</TableHead>
-                <TableHead class="w-[100px]">Year</TableHead>
+                <TableHead v-if="questionnaireIsPublic" class="w-[120px]">
+                  NIM
+                </TableHead>
+                <TableHead v-if="questionnaireIsPublic" class="w-[200px]">
+                  Name
+                </TableHead>
+                <TableHead v-if="questionnaireIsPublic" class="w-[180px]">
+                  Study Program
+                </TableHead>
+                <TableHead v-if="questionnaireIsPublic" class="w-[100px]">
+                  Year
+                </TableHead>
                 <TableHead>Answer</TableHead>
                 <TableHead class="w-[180px]">Submitted At</TableHead>
               </TableRow>
@@ -176,7 +200,7 @@ function handleExport() {
             <TableBody>
               <TableRow v-if="filteredAnswers.length === 0">
                 <TableCell
-                  colspan="6"
+                  :colspan="questionnaireIsPublic ? 6 : 2"
                   class="text-center py-8 text-muted-foreground"
                 >
                   <MessageSquare class="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -188,10 +212,18 @@ function handleExport() {
                 :key="answer.id"
                 class="hover:bg-muted/50"
               >
-                <TableCell class="font-medium">{{ answer.nim }}</TableCell>
-                <TableCell>{{ answer.nama }}</TableCell>
-                <TableCell>{{ answer.prodi }}</TableCell>
-                <TableCell>{{ answer.tahun_lulus }}</TableCell>
+                <TableCell v-if="questionnaireIsPublic" class="font-medium">
+                  {{ answer.nim }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ answer.nama }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ answer.prodi }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ answer.tahun_lulus }}
+                </TableCell>
                 <TableCell class="max-w-md">
                   <div class="line-clamp-2" :title="answer.answer">
                     {{ answer.answer || "-" }}

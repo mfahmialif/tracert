@@ -3,6 +3,7 @@ import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/composables/useTheme";
+import PublicPageLoader from "@/views/public/PublicPageLoader.vue";
 import {
   ArrowRight,
   Award,
@@ -27,6 +28,7 @@ const router = useRouter();
 const { isDark, toggleTheme } = useTheme();
 
 const isVisible = ref(false);
+const loading = ref(true);
 const isScrolled = ref(false);
 const mobileMenuOpen = ref(false);
 const activeSection = ref("");
@@ -103,15 +105,34 @@ const processSteps = [
   },
 ];
 
+function preloadImage(src: string) {
+  return new Promise<void>((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = src;
+
+    if (image.complete) resolve();
+  });
+}
+
 onMounted(async () => {
   window.setTimeout(() => {
     isVisible.value = true;
   }, 120);
 
-  await nextTick();
-  handleScroll();
-  initAosFallback();
-  window.addEventListener("scroll", handleScroll, { passive: true });
+  try {
+    await Promise.all([
+      nextTick(),
+      preloadImage(heroImage),
+      preloadImage(logoImage),
+    ]);
+    handleScroll();
+    initAosFallback();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+  } finally {
+    loading.value = false;
+  }
 });
 
 onUnmounted(() => {
@@ -245,6 +266,8 @@ function initAosFallback() {
   <div
     class="min-h-screen overflow-hidden bg-transparent text-slate-950 antialiased dark:text-white"
   >
+    <PublicPageLoader v-if="loading" message="Sedang menyiapkan halaman utama..." />
+
     <div class="pointer-events-none fixed inset-0 -z-10">
       <div
         class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_80%_10%,rgba(20,184,166,0.18),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.84),rgba(240,253,244,0.9))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_80%_10%,rgba(45,212,191,0.14),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(6,30,24,0.94))]"

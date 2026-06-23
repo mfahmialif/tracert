@@ -32,6 +32,7 @@ const faculties = ref<any[]>([]);
 const form = reactive({
   name: "",
   code: "",
+  alias: "",
   faculty_id: "",
   strata: "S1",
 });
@@ -116,7 +117,17 @@ async function handleSubmit() {
               <Input
                 id="code"
                 v-model="form.code"
-                placeholder="Contoh: TI"
+                placeholder="Contoh: 86208"
+                required
+              />
+            </div>
+
+            <div class="grid gap-2">
+              <Label for="alias">Alias Prodi</Label>
+              <Input
+                id="alias"
+                v-model="form.alias"
+                placeholder="Contoh: PAI"
                 required
               />
             </div>

@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTheme } from "@/composables/useTheme";
+import PublicPageLoader from "./PublicPageLoader.vue";
 import {
   Select,
   SelectContent,
@@ -113,6 +114,8 @@ async function handleSubmit() {
   <div
     class="min-h-screen overflow-hidden bg-transparent text-slate-950 antialiased dark:text-white"
   >
+    <PublicPageLoader v-if="loading" message="Sedang menyiapkan formulir kuesioner..." />
+
     <div class="pointer-events-none fixed inset-0 -z-10">
       <div
         class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(20,184,166,0.16),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.86),rgba(240,253,244,0.92))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(45,212,191,0.12),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(6,30,24,0.94))]"
@@ -165,14 +168,8 @@ async function handleSubmit() {
       </div>
     </header>
 
-    <div v-if="loading" class="flex justify-center py-20">
-      <div
-        class="h-12 w-12 animate-spin rounded-full border-4 border-emerald-100 border-b-emerald-600 dark:border-emerald-950 dark:border-b-emerald-300"
-      ></div>
-    </div>
-
     <div
-      v-else-if="submitted"
+      v-if="!loading && submitted"
       class="container mx-auto flex min-h-[70vh] max-w-2xl items-center px-6 py-20 text-center"
     >
       <div
@@ -196,7 +193,7 @@ async function handleSubmit() {
     </div>
 
     <main
-      v-else-if="questionnaire"
+      v-else-if="!loading && questionnaire"
       class="container mx-auto px-6 py-12 max-w-4xl"
     >
       <Card

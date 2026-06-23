@@ -5,19 +5,23 @@ namespace App\Exports;
 use App\Models\Questionnaire;
 use App\Models\Response;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class QuestionnaireResultExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class QuestionnaireResultExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
     protected $questionnaireId;
+
+    protected $questionnaire;
+
     protected $questions;
 
     public function __construct($questionnaireId)
     {
         $this->questionnaireId = $questionnaireId;
-        $this->questions = Questionnaire::find($questionnaireId)->questions()->orderBy('section')->orderBy('order')->get();
+        $this->questionnaire = Questionnaire::findOrFail($questionnaireId);
+        $this->questions = $this->questionnaire->questions()->orderBy('section')->orderBy('order')->get();
     }
 
     public function collection()
@@ -29,13 +33,9 @@ class QuestionnaireResultExport implements FromCollection, WithHeadings, WithMap
 
     public function headings(): array
     {
-        $headers = [
-            'NIM',
-            'Nama Lengkap',
-            'Prodi',
-            'Tahun Lulus',
-            'Tanggal Submit',
-        ];
+        $headers = $this->questionnaire->is_public
+            ? ['Nama Responden', 'Email', 'No. Telepon', 'Tanggal Submit']
+            : ['NIM', 'Nama Lengkap', 'Prodi', 'Tahun Lulus', 'Tanggal Submit'];
 
         foreach ($this->questions as $question) {
             $headers[] = $question->question_text;
@@ -46,13 +46,20 @@ class QuestionnaireResultExport implements FromCollection, WithHeadings, WithMap
 
     public function map($response): array
     {
-        $row = [
-            $response->alumni->nim ?? '-',
-            $response->alumni->fullname ?? '-',
-            $response->alumni->prodi->name ?? '-',
-            $response->alumni->year->year ?? '-',
-            $response->submitted_at->format('Y-m-d H:i:s'),
-        ];
+        $row = $this->questionnaire->is_public
+            ? [
+                $response->respondent_name ?? '-',
+                $response->respondent_email ?? '-',
+                $response->respondent_phone ?? '-',
+                $response->submitted_at?->format('Y-m-d H:i:s') ?? '-',
+            ]
+            : [
+                $response->alumni?->nim ?? '-',
+                $response->alumni?->nama ?? '-',
+                $response->alumni?->prodi?->name ?? '-',
+                $response->alumni?->year?->name ?? '-',
+                $response->submitted_at?->format('Y-m-d H:i:s') ?? '-',
+            ];
 
         $answers = $response->answers->keyBy('question_id');
 

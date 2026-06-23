@@ -50,6 +50,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'admin' },
     },
     {
+      path: '/admin/users',
+      name: 'superadmin-users',
+      component: () => import('../views/superadmin/UserManagementView.vue'),
+      meta: { requiresAuth: true, role: 'superadmin' },
+    },
+    {
       path: '/admin/alumni',
       name: 'admin-alumni',
       component: () => import('../views/admin/AlumniView.vue'),
@@ -218,6 +224,10 @@ router.beforeEach(async (to, _from, next) => {
   if (requiredRole && authStore.isAuthenticated) {
     if (requiredRole === 'admin' && !authStore.isAdmin) {
       next({ path: '/', replace: true })
+      return
+    }
+    if (requiredRole === 'superadmin' && !authStore.isSuperAdmin) {
+      next({ path: '/admin', replace: true })
       return
     }
     if (requiredRole === 'alumni' && authStore.isAdmin) {

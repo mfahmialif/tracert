@@ -20,7 +20,8 @@ class ProdiController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('alias', 'like', "%{$search}%");
             });
         }
 
@@ -34,6 +35,7 @@ class ProdiController extends Controller
             'faculty_id' => 'required|exists:faculties,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:20|unique:prodis,code',
+            'alias' => 'required|string|max:20|unique:prodis,alias',
             'strata' => 'required|in:S1,S2,S3',
         ]);
 
@@ -58,6 +60,7 @@ class ProdiController extends Controller
             'faculty_id' => 'required|exists:faculties,id',
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:20|unique:prodis,code,' . $prodi->id,
+            'alias' => 'required|string|max:20|unique:prodis,alias,' . $prodi->id,
             'strata' => 'required|in:S1,S2,S3',
         ]);
 

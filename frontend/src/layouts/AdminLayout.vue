@@ -33,6 +33,7 @@ import {
   CalendarDays,
   ChevronDown,
   User,
+  UserCog,
 } from "lucide-vue-next";
 
 const router = useRouter();
@@ -107,6 +108,14 @@ async function handleLogout() {
                   <component :is="item.icon" class="h-5 w-5" /> {{ item.label }}
                 </Button>
               </template>
+              <Button
+                v-if="authStore.isSuperAdmin"
+                variant="ghost"
+                :class="['w-full', navButtonClass('/admin/users')]"
+                @click="router.push('/admin/users')"
+              >
+                <UserCog class="h-5 w-5" /> User & Level
+              </Button>
               <router-link
                 to="/admin/faculties"
                 custom
@@ -228,6 +237,15 @@ async function handleLogout() {
                 <component :is="item.icon" class="h-4 w-4" /> {{ item.label }}
               </Button>
             </template>
+            <Button
+              v-if="authStore.isSuperAdmin"
+              variant="ghost"
+              size="sm"
+              :class="navButtonClass('/admin/users')"
+              @click="router.push('/admin/users')"
+            >
+              <UserCog class="h-4 w-4" /> User & Level
+            </Button>
           </nav>
         </div>
 
@@ -260,7 +278,7 @@ async function handleLogout() {
                     {{ authStore.user?.username || "Admin" }}
                   </p>
                   <p class="text-xs leading-none text-muted-foreground">
-                    Administrator
+                    {{ authStore.isSuperAdmin ? "Superadministrator" : "Administrator" }}
                   </p>
                 </div>
               </DropdownMenuLabel>

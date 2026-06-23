@@ -245,7 +245,7 @@ async function handleReorder() {
               </Button>
             </div>
             <p class="text-muted-foreground text-sm">
-              {{ questionnaire?.year?.name }} •
+              {{ questionnaire?.year?.name }} {{ questionnaire?.year?.smt || '' }} •
               {{ questionnaire?.is_active ? "Aktif" : "Draft" }}
             </p>
           </div>
@@ -358,7 +358,7 @@ async function handleReorder() {
                       v-for="y in years"
                       :key="y.id"
                       :value="y.id.toString()"
-                      >{{ y.name }}</SelectItem
+                      >{{ y.name }} {{ y.smt || '' }}</SelectItem
                     >
                   </SelectContent>
                 </Select>

@@ -14,11 +14,14 @@ class Response extends Model
         'respondent_name',
         'respondent_email',
         'respondent_phone',
+        'is_generated',
+        'generated_by',
         'submitted_at',
     ];
 
     protected $casts = [
         'submitted_at' => 'datetime',
+        'is_generated' => 'boolean',
     ];
 
     public function questionnaire(): BelongsTo

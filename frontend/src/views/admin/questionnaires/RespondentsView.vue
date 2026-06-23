@@ -28,6 +28,7 @@ const router = useRouter();
 const loading = ref(true);
 const questionnaireTitle = ref("");
 const totalResponses = ref(0);
+const questionnaireIsPublic = ref(true);
 const respondents = ref<any[]>([]);
 const searchQuery = ref("");
 
@@ -38,6 +39,7 @@ onMounted(async () => {
     );
     questionnaireTitle.value = data.questionnaire_title;
     totalResponses.value = data.total_responses;
+    questionnaireIsPublic.value = data.is_public ?? true;
     respondents.value = data.respondents;
   } catch (error) {
     console.error("Failed to fetch respondents", error);
@@ -51,15 +53,50 @@ const filteredRespondents = computed(() => {
 
   const query = searchQuery.value.toLowerCase();
   return respondents.value.filter(
-    (r) =>
-      r.nim.toLowerCase().includes(query) ||
-      r.nama.toLowerCase().includes(query) ||
-      r.prodi.toLowerCase().includes(query)
+    (r) => {
+      if (!questionnaireIsPublic.value) {
+        return (
+          String(r.nama ?? "").toLowerCase().includes(query) ||
+          String(r.email ?? "").toLowerCase().includes(query) ||
+          String(r.telepon ?? "").toLowerCase().includes(query) ||
+          String(r.submitted_at ?? "").toLowerCase().includes(query)
+        );
+      }
+
+      return (
+        String(r.submitted_at ?? "").toLowerCase().includes(query) ||
+        String(r.status ?? "").toLowerCase().includes(query)
+      );
+    }
   );
 });
 
 function handleExport() {
-  // Export to Excel (could be implemented later)
+  // Export to Excel/CSV
+  if (!questionnaireIsPublic.value) {
+    const csv = [
+      ["Nama Responden", "Email", "No. Telepon", "Tanggal Submit", "Status"],
+      ...filteredRespondents.value.map((r) => [
+        r.nama,
+        r.email,
+        r.telepon,
+        r.submitted_at,
+        r.status,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `responden_${questionnaireTitle.value.replace(/\s+/g, "_")}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    return;
+  }
+
   const csv = [
     ["NIM", "Nama", "Prodi", "Tahun Lulus", "Tanggal Submit", "Status"],
     ...filteredRespondents.value.map((r) => [
@@ -129,7 +166,11 @@ function handleExport() {
           />
           <Input
             v-model="searchQuery"
-            placeholder="Search by NIM, name, or prodi..."
+            :placeholder="
+              questionnaireIsPublic
+                ? 'Search by submit time or status...'
+                : 'Search by name, email, phone, or submit date...'
+            "
             class="pl-9"
           />
         </div>
@@ -152,10 +193,13 @@ function handleExport() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>NIM</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Study Program</TableHead>
-                <TableHead>Graduation Year</TableHead>
+                <TableHead v-if="!questionnaireIsPublic">Name</TableHead>
+                <TableHead v-if="!questionnaireIsPublic">Email</TableHead>
+                <TableHead v-if="!questionnaireIsPublic">Phone</TableHead>
+                <TableHead v-if="questionnaireIsPublic">NIM</TableHead>
+                <TableHead v-if="questionnaireIsPublic">Name</TableHead>
+                <TableHead v-if="questionnaireIsPublic">Study Program</TableHead>
+                <TableHead v-if="questionnaireIsPublic">Graduation Year</TableHead>
                 <TableHead>Submitted At</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
@@ -163,7 +207,7 @@ function handleExport() {
             <TableBody>
               <TableRow v-if="filteredRespondents.length === 0">
                 <TableCell
-                  colspan="6"
+                  :colspan="!questionnaireIsPublic ? 5 : 6"
                   class="text-center py-8 text-muted-foreground"
                 >
                   <Users class="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -174,10 +218,27 @@ function handleExport() {
                 v-for="respondent in filteredRespondents"
                 :key="respondent.id"
               >
-                <TableCell class="font-medium">{{ respondent.nim }}</TableCell>
-                <TableCell>{{ respondent.nama }}</TableCell>
-                <TableCell>{{ respondent.prodi }}</TableCell>
-                <TableCell>{{ respondent.tahun_lulus }}</TableCell>
+                <TableCell v-if="!questionnaireIsPublic" class="font-medium">
+                  {{ respondent.nama }}
+                </TableCell>
+                <TableCell v-if="!questionnaireIsPublic">
+                  {{ respondent.email }}
+                </TableCell>
+                <TableCell v-if="!questionnaireIsPublic">
+                  {{ respondent.telepon }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic" class="font-medium">
+                  {{ respondent.nim }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ respondent.nama }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ respondent.prodi }}
+                </TableCell>
+                <TableCell v-if="questionnaireIsPublic">
+                  {{ respondent.tahun_lulus }}
+                </TableCell>
                 <TableCell>{{ respondent.submitted_at }}</TableCell>
                 <TableCell>
                   <Badge

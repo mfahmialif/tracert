@@ -142,7 +142,7 @@ async function handleSubmit() {
                     :key="y.id"
                     :value="y.id.toString()"
                   >
-                    {{ y.name }}
+                    {{ y.name }} {{ y.smt || '' }}
                   </SelectItem>
                 </SelectContent>
               </Select>

@@ -38,6 +38,7 @@ import {
   BarChart2,
   ClipboardList,
   Sparkles,
+  Copy,
 } from "lucide-vue-next";
 import {
   DropdownMenu,
@@ -58,6 +59,7 @@ const router = useRouter();
 const questionnaires = ref<any[]>([]);
 const loading = ref(false);
 const deleteId = ref<number | null>(null);
+const duplicating = ref<number | null>(null);
 const search = ref("");
 let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -187,6 +189,19 @@ async function handleDelete() {
     toast.error(e.response?.data?.message || "Gagal menghapus kuesioner");
   }
 }
+
+async function handleDuplicate(id: number) {
+  duplicating.value = id;
+  try {
+    const response = await api.post(`/admin/questionnaires/${id}/duplicate`);
+    toast.success(response.data.message || "Kuesioner berhasil diduplikasi");
+    fetchQuestionnaires();
+  } catch (e: any) {
+    toast.error(e.response?.data?.message || "Gagal menduplikasi kuesioner");
+  } finally {
+    duplicating.value = null;
+  }
+}
 </script>
 
 <template>
@@ -312,7 +327,7 @@ async function handleDelete() {
       >
         <CardHeader>
           <div class="flex justify-between items-start">
-            <Badge variant="outline" class="rounded-full border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">{{ q.year?.name || q.year_id }}</Badge>
+            <Badge variant="outline" class="rounded-full border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">{{ q.year?.name }} {{ q.year?.smt || '' }}</Badge>
             <Badge
               :variant="q.is_active ? 'default' : 'secondary'"
               :class="q.is_active ? 'rounded-full bg-emerald-600 hover:bg-emerald-700' : 'rounded-full'"
@@ -390,6 +405,17 @@ async function handleDelete() {
             @click="router.push(`/admin/questionnaires/${q.id}/edit`)"
           >
             <Edit class="mr-2 h-4 w-4" /> Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            class="rounded-2xl bg-white/70 dark:bg-slate-950/40"
+            :disabled="duplicating === q.id"
+            @click="handleDuplicate(q.id)"
+            title="Duplikasi Kuesioner"
+          >
+            <span v-if="duplicating === q.id" class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+            <Copy v-else class="h-4 w-4" />
           </Button>
           <Dialog>
             <DialogTrigger as-child>

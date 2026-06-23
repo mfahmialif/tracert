@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Prodi extends Model
 {
-    protected $fillable = ['faculty_id', 'name', 'code', 'strata'];
+    protected $fillable = ['faculty_id', 'name', 'code', 'alias', 'strata'];
 
     public function faculty()
     {

@@ -10,13 +10,17 @@ class FacultySeeder extends Seeder
     public function run(): void
     {
         $faculties = [
-            ['name' => 'Fakultas Teknik', 'code' => 'FT'],
-            ['name' => 'Fakultas Ekonomi', 'code' => 'FE'],
-            ['name' => 'Fakultas Ilmu Komputer', 'code' => 'FIK'],
+            ['name' => 'Fakultas Tarbiyah', 'code' => 'FT'],
+            ['name' => 'Fakultas Syariah', 'code' => 'FS'],
+            ['name' => 'Fakultas Adab', 'code' => 'FA'],
+            ['name' => 'Fakultas Dakwah', 'code' => 'FD'],
         ];
 
         foreach ($faculties as $faculty) {
-            Faculty::create($faculty);
+            Faculty::updateOrCreate(
+                ['code' => $faculty['code']],
+                ['name' => $faculty['name']],
+            );
         }
     }
 }

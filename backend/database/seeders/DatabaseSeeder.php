@@ -21,8 +21,8 @@ class DatabaseSeeder extends Seeder
             YearSeeder::class,
             UserSeeder::class,
             // QuestionnaireTypeSeeder::class, // Removed
-            AlumniSeeder::class,
-            QuestionnaireSeeder::class,
+            // AlumniSeeder::class,
+            // QuestionnaireSeeder::class,
         ]);
     }
 }

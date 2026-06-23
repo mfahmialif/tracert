@@ -142,6 +142,20 @@ export const useQuestionnaireManagementStore = defineStore('questionnaireManagem
     }
   }
 
+  async function duplicateQuestionnaire(id: number) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post(`/admin/questionnaires/${id}/duplicate`)
+      return response.data
+    } catch (e: any) {
+      error.value = e.response?.data?.message || 'Gagal menduplikasi kuesioner'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Questions
   async function addQuestion(questionnaireId: number, data: any) {
     loading.value = true
@@ -214,6 +228,7 @@ export const useQuestionnaireManagementStore = defineStore('questionnaireManagem
     createQuestionnaire,
     updateQuestionnaire,
     deleteQuestionnaire,
+    duplicateQuestionnaire,
     addQuestion,
     updateQuestion,
     deleteQuestion,
