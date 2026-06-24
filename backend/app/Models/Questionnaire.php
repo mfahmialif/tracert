@@ -50,9 +50,10 @@ class Questionnaire extends Model
     public function isOpen(): bool
     {
         $now = now()->toDateString();
-        return $this->is_active
-            && $this->start_date <= $now
-            && $this->end_date >= $now;
+        $isStarted = is_null($this->start_date) || $this->start_date->toDateString() <= $now;
+        $isNotEnded = is_null($this->end_date) || $this->end_date->toDateString() >= $now;
+        
+        return $this->is_active && $isStarted && $isNotEnded;
     }
 
     public function scopeActive($query)
@@ -64,7 +65,13 @@ class Questionnaire extends Model
     {
         $now = now()->toDateString();
         return $query->active()
-            ->where('questionnaires.start_date', '<=', $now)
-            ->where('questionnaires.end_date', '>=', $now);
+            ->where(function ($q) use ($now) {
+                $q->whereNull('questionnaires.start_date')
+                  ->orWhere('questionnaires.start_date', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('questionnaires.end_date')
+                  ->orWhere('questionnaires.end_date', '>=', $now);
+            });
     }
 }

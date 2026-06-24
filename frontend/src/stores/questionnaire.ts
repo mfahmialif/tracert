@@ -76,9 +76,13 @@ export const useQuestionnaireStore = defineStore("questionnaire", () => {
     sortBy = "newest",
     sortOrder = "desc",
     status = "pending",
-    search = "" // Add search param
+    search = "",
+    silent = false
   ) {
-    loading.value = true;
+    if (!silent) {
+      loading.value = true;
+      if (!append) questionnaires.value = [];
+    }
     error.value = null;
     try {
       const response = await api.get("/questionnaires", {
@@ -100,11 +104,14 @@ export const useQuestionnaireStore = defineStore("questionnaire", () => {
       }
       
       meta.value = {
-        current_page: response.data.current_page,
-        last_page: response.data.last_page,
-        total: response.data.total,
-        per_page: response.data.per_page,
+        current_page: response.data.meta.current_page,
+        last_page: response.data.meta.last_page,
+        total: response.data.meta.total,
+        per_page: response.data.meta.per_page,
       };
+
+      // Also refresh counts to ensure stats are always up to date
+      fetchCounts();
     } catch (e: any) {
       error.value = e.response?.data?.message || "Gagal memuat kuesioner";
     } finally {

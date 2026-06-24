@@ -106,7 +106,12 @@ const debouncedFetch = debounce(
 
 watch(
   [sortBy, sortOrder, activeTab, searchQuery],
-  ([newSortBy, newSortOrder, newActiveTab, newSearch]) => {
+  ([newSortBy, newSortOrder, newActiveTab, newSearch], [oldSortBy, oldSortOrder, oldActiveTab, oldSearch]) => {
+    // Instantly clear data to show spinner when switching tabs
+    if (newActiveTab !== oldActiveTab) {
+      qStore.questionnaires = [];
+    }
+    
     // If search changed, always debounce
     // For other changes, we might want immediate reaction, but keeping it simple with one debounced watcher is fine/smoother
     debouncedFetch(newSortBy, newSortOrder, newActiveTab, newSearch);
