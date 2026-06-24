@@ -61,7 +61,36 @@ watch(
   questionnaire,
   (newQ) => {
     if (newQ?.submitted_answers) {
-      answers.value = { ...newQ.submitted_answers };
+      const newAnswers = { ...newQ.submitted_answers };
+      
+      if (newQ.sections) {
+        newQ.sections.forEach((section: any) => {
+          section.questions.forEach((question: any) => {
+            const val = newAnswers[question.id];
+            if (!val) return;
+
+            if (question.allow_other) {
+              if (question.type === 'radio') {
+                if (!question.options.includes(val)) {
+                  otherTexts.value[question.id] = val;
+                  newAnswers[question.id] = '__other__';
+                }
+              } else if (question.type === 'checkbox' && Array.isArray(val)) {
+                const checkedOptions = val.map((v: string) => {
+                  if (!question.options.includes(v)) {
+                    otherTexts.value[question.id] = v;
+                    return '__other__';
+                  }
+                  return v;
+                });
+                newAnswers[question.id] = checkedOptions;
+              }
+            }
+          });
+        });
+      }
+      
+      answers.value = newAnswers;
     }
   },
   { immediate: true }
