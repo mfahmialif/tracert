@@ -381,11 +381,30 @@ class QuestionnaireManagementController extends Controller
 
     public function exportPdf($id)
     {
-        $data = $this->getResultsData($id);
-        $pdf = Pdf::loadView('exports.questionnaire_results', $data);
-        $filename = 'hasil_kuesioner_'.Str::slug($data['title']).'_'.date('Y-m-d').'.pdf';
+        // Increase memory and time limits for heavy PDF generation on servers
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', '300');
 
-        return $pdf->download($filename);
+        try {
+            $data = $this->getResultsData($id);
+            $pdf = Pdf::loadView('exports.questionnaire_results', $data);
+            
+            // Set some robust options for server environments
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+                'chroot' => public_path(),
+            ]);
+
+            $filename = 'hasil_kuesioner_'.Str::slug($data['title']).'_'.date('Y-m-d').'.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal membuat PDF: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 
     private function getResultsData($id)
