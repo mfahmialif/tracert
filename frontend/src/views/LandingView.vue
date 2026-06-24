@@ -33,6 +33,7 @@ const isScrolled = ref(false);
 const mobileMenuOpen = ref(false);
 const activeSection = ref("");
 let aosObserver: IntersectionObserver | null = null;
+let sectionObserver: IntersectionObserver | null = null;
 
 const heroImage = new URL("@/assets/img/hero-professional.svg", import.meta.url).href;
 const logoImage = "/logo_uiidalwa.png";
@@ -129,6 +130,7 @@ onMounted(async () => {
     ]);
     handleScroll();
     initAosFallback();
+    initSectionObserver();
     window.addEventListener("scroll", handleScroll, { passive: true });
   } finally {
     loading.value = false;
@@ -138,43 +140,36 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
   aosObserver?.disconnect();
+  sectionObserver?.disconnect();
 });
 
 function handleScroll() {
+  // Only do cheap read of scrollY, no layout thrashing DOM measurements
   isScrolled.value = window.scrollY > 24;
+}
 
-  if (window.scrollY < 160) {
-    activeSection.value = "home";
-    return;
-  }
+function initSectionObserver() {
+  if (!("IntersectionObserver" in window)) return;
+  
+  sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          activeSection.value = entry.target.id;
+        }
+      });
+    },
+    {
+      rootMargin: "-40% 0px -40% 0px",
+    }
+  );
 
-  const isNearBottom =
-    window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
-
-  if (isNearBottom) {
-    activeSection.value = "contact";
-    return;
-  }
-
-  const activationLine = Math.min(window.innerHeight * 0.38, 320);
-  const current = sectionIds
-    .map((id) => {
-      const element = document.getElementById(id);
-
-      return element
-        ? {
-            id,
-            top: element.getBoundingClientRect().top,
-            bottom: element.getBoundingClientRect().bottom,
-          }
-        : null;
-    })
-    .filter(Boolean)
-    .find((section) => {
-      return section!.top <= activationLine && section!.bottom > activationLine;
-    });
-
-  activeSection.value = current?.id ?? activeSection.value;
+  sectionIds.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      sectionObserver?.observe(element);
+    }
+  });
 }
 
 function navigateToCheck() {
@@ -282,7 +277,7 @@ function initAosFallback() {
 
     <header class="fixed inset-x-0 top-0 z-50 px-4 pt-4 transition-all duration-300 md:px-8">
       <nav
-        class="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border px-4 py-3 backdrop-blur-2xl transition-all duration-300 md:px-5"
+        class="mx-auto flex max-w-7xl items-center justify-between rounded-3xl border px-4 py-3 backdrop-blur-md md:backdrop-blur-2xl transition-all duration-300 md:px-5"
         :class="
           isScrolled
             ? 'border-slate-200/80 bg-white/90 shadow-xl shadow-slate-900/5 dark:border-white/10 dark:bg-slate-950/90'
@@ -364,7 +359,7 @@ function initAosFallback() {
 
       <div
         v-if="mobileMenuOpen"
-        class="mx-auto mt-3 max-w-7xl rounded-3xl border border-slate-200/80 bg-white/90 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:hidden"
+        class="mx-auto mt-3 max-w-7xl rounded-3xl border border-slate-200/80 bg-white/90 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-md md:backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/90 md:hidden"
       >
         <a
           v-for="item in navItems"
@@ -452,7 +447,7 @@ function initAosFallback() {
               <div
                 v-for="(stat, index) in stats"
                 :key="stat.label"
-                class="rounded-3xl border border-white/80 bg-white/72 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]"
+                class="rounded-3xl border border-white/80 bg-white/72 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06]"
                 :style="{ animationDelay: `${0.2 + index * 0.08}s` }"
                 :class="{ 'animate-fade-in-up': isVisible }"
                 data-aos="fade-up"
@@ -474,7 +469,7 @@ function initAosFallback() {
           >
             <div class="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-emerald-600/24 via-teal-600/18 to-lime-500/16 blur-2xl" />
             <div
-              class="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/76 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/30"
+              class="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/76 p-3 shadow-2xl shadow-slate-900/10 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.06] dark:shadow-black/30"
             >
               <div class="overflow-hidden rounded-[1.5rem] bg-slate-100 dark:bg-slate-900">
                 <img
@@ -484,7 +479,7 @@ function initAosFallback() {
                 />
               </div>
               <div
-                class="absolute left-6 top-6 rounded-2xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70"
+                class="absolute left-6 top-6 rounded-2xl border border-white/70 bg-white/80 p-4 shadow-xl shadow-slate-900/10 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70"
               >
                 <div class="flex items-center gap-3">
                   <span class="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-300">
@@ -497,7 +492,7 @@ function initAosFallback() {
                 </div>
               </div>
               <div
-                class="absolute bottom-6 right-6 rounded-2xl border border-white/70 bg-slate-950/90 p-4 text-white shadow-xl shadow-slate-900/20 backdrop-blur-xl dark:border-white/10"
+                class="absolute bottom-6 right-6 rounded-2xl border border-white/70 bg-slate-950/90 p-4 text-white shadow-xl shadow-slate-900/20 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10"
               >
                 <div class="flex items-center gap-3">
                   <LineChart class="h-9 w-9 text-emerald-300" />
@@ -536,7 +531,7 @@ function initAosFallback() {
             <article
               v-for="(feature, index) in features"
               :key="feature.title"
-              class="group overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/78 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-600/10 dark:border-white/10 dark:bg-white/[0.06]"
+              class="group overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/78 shadow-xl shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-emerald-600/10 dark:border-white/10 dark:bg-white/[0.06]"
               data-aos="fade-up"
               :data-aos-delay="index * 90"
             >
@@ -564,7 +559,7 @@ function initAosFallback() {
 
       <section id="process" class="scroll-mt-32 px-4 py-20 md:px-8">
         <div
-          class="mx-auto max-w-7xl rounded-[2.5rem] border border-slate-200/80 bg-white/72 p-6 shadow-2xl shadow-slate-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] md:p-10"
+          class="mx-auto max-w-7xl rounded-[2.5rem] border border-slate-200/80 bg-white/72 p-6 shadow-2xl shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10 dark:bg-white/[0.05] md:p-10"
           data-aos="fade-up"
         >
           <div class="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
@@ -639,7 +634,7 @@ function initAosFallback() {
 
     <footer
       id="contact"
-      class="scroll-mt-32 border-t border-slate-200/80 bg-white/72 px-4 py-12 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 md:px-8"
+      class="scroll-mt-32 border-t border-slate-200/80 bg-white/72 px-4 py-12 backdrop-blur-md md:backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70 md:px-8"
       data-aos="fade-up"
     >
       <div class="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
@@ -729,11 +724,9 @@ function initAosFallback() {
 
 [data-aos] {
   opacity: 0;
-  filter: blur(4px);
-  transition-property: opacity, transform, filter;
+  transition-property: opacity, transform;
   transition-duration: 720ms;
   transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: opacity, transform, filter;
 }
 
 [data-aos="fade-up"] {
@@ -754,14 +747,12 @@ function initAosFallback() {
 
 [data-aos].aos-animate {
   opacity: 1;
-  filter: blur(0);
   transform: translate3d(0, 0, 0) scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   [data-aos] {
     opacity: 1;
-    filter: none;
     transform: none;
     transition: none;
   }

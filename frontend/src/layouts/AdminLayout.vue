@@ -73,14 +73,14 @@ async function handleLogout() {
 
 <template>
   <div class="min-h-screen overflow-hidden bg-transparent text-slate-950 dark:text-white">
-    <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="pointer-events-none fixed inset-0 -z-10 hidden md:block">
       <div class="absolute left-[-12rem] top-28 h-[32rem] w-[32rem] rounded-full bg-emerald-400/10 blur-[130px] dark:bg-emerald-400/8" />
       <div class="absolute right-[-10rem] top-12 h-[28rem] w-[28rem] rounded-full bg-teal-300/8 blur-[140px] dark:bg-cyan-400/7" />
       <div class="absolute bottom-[-12rem] left-1/3 h-[30rem] w-[38rem] rounded-full bg-blue-500/6 blur-[150px] dark:bg-blue-700/10" />
     </div>
 
     <header
-      class="sticky top-0 z-40 w-full border-b border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/76"
+      class="sticky top-0 z-40 w-full border-b border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/76"
     >
       <div class="mx-auto flex h-[4.5rem] max-w-[1440px] items-center justify-between px-4 md:h-20 md:px-6">
         <Sheet>

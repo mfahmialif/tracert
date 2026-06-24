@@ -37,7 +37,7 @@ function startSurvey(id: number) {
   >
     <PublicPageLoader v-if="loading" message="Sedang memuat daftar kuesioner..." />
 
-    <div class="pointer-events-none fixed inset-0 -z-10">
+    <div class="pointer-events-none fixed inset-0 -z-10 hidden md:block">
       <div
         class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.22),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(20,184,166,0.16),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.86),rgba(240,253,244,0.92))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.2),transparent_34%),radial-gradient(circle_at_85%_0%,rgba(45,212,191,0.12),transparent_30%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(6,30,24,0.94))]"
       />
@@ -46,7 +46,7 @@ function startSurvey(id: number) {
     </div>
 
     <header
-      class="sticky top-0 z-50 border-b border-white/70 bg-white/82 shadow-lg shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/82"
+      class="sticky top-0 z-50 border-b border-white/70 bg-white/82 shadow-lg shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/82"
     >
       <div class="container mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
