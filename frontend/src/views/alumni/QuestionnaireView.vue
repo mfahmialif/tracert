@@ -41,6 +41,7 @@ const qStore = useQuestionnaireStore();
 
 const currentSection = ref(1);
 const answers = ref<Record<number, any>>({});
+const otherTexts = ref<Record<number, string>>({});
 const showSuccess = ref(false);
 
 const questionnaireId = computed(() => Number(route.params.id));
@@ -112,7 +113,21 @@ function prevSection() {
 
 async function submitQuestionnaire() {
   const formattedAnswers = Object.entries(answers.value).map(
-    ([questionId, value]) => ({ question_id: Number(questionId), value })
+    ([questionId, value]) => {
+      const qId = Number(questionId);
+      let resolvedValue = value;
+
+      // Replace __other__ with actual typed text
+      if (value === '__other__') {
+        resolvedValue = otherTexts.value[qId] || '';
+      } else if (Array.isArray(value) && value.includes('__other__')) {
+        resolvedValue = value.map((v: string) =>
+          v === '__other__' ? (otherTexts.value[qId] || '') : v
+        ).filter((v: string) => v !== '');
+      }
+
+      return { question_id: qId, value: resolvedValue };
+    }
   );
   const success = await qStore.submitQuestionnaire(
     questionnaireId.value,
@@ -274,6 +289,28 @@ function handleSuccessClose() {
                     >{{ option }}</Label
                   >
                 </div>
+                <!-- Yang Lain option -->
+                <div
+                  v-if="question.allow_other"
+                  class="space-y-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]"
+                >
+                  <div class="flex items-center space-x-2">
+                    <RadioGroupItem
+                      :id="`${question.id}-other`"
+                      value="__other__"
+                    />
+                    <Label :for="`${question.id}-other`" class="font-normal"
+                      >Yang lain</Label
+                    >
+                  </div>
+                  <Input
+                    v-if="answers[question.id] === '__other__'"
+                    v-model="otherTexts[question.id]"
+                    placeholder="Tulis jawaban lainnya..."
+                    :disabled="isReadOnly"
+                    class="mt-2 rounded-xl bg-white/80 dark:bg-slate-950/50"
+                  />
+                </div>
               </RadioGroup>
 
               <!-- Checkbox -->
@@ -316,6 +353,50 @@ function handleSuccessClose() {
                     class="font-normal cursor-pointer pointer-events-none"
                     >{{ option }}</Label
                   >
+                </div>
+                <!-- Yang Lain option -->
+                <div
+                  v-if="question.allow_other"
+                  class="space-y-2 rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]"
+                >
+                  <div
+                    class="flex cursor-pointer items-center space-x-2"
+                    @click="
+                      () => {
+                        if (isReadOnly) return;
+                        const current = answers[question.id] || [];
+                        const isChecked = current.includes('__other__');
+                        toggleCheckbox(question.id, '__other__', !isChecked);
+                        if (isChecked) {
+                          otherTexts[question.id] = '';
+                        }
+                      }
+                    "
+                  >
+                    <div
+                      class="grid h-5 w-5 shrink-0 place-content-center rounded-md border border-emerald-500 shadow transition-colors"
+                      :class="{
+                        'bg-emerald-600 text-white': (answers[question.id] || []).includes('__other__'),
+                        'opacity-50 cursor-not-allowed': isReadOnly,
+                      }"
+                    >
+                      <Check
+                        v-if="(answers[question.id] || []).includes('__other__')"
+                        class="h-3 w-3 text-white"
+                        stroke-width="3"
+                      />
+                    </div>
+                    <Label class="font-normal cursor-pointer pointer-events-none"
+                      >Yang lain</Label
+                    >
+                  </div>
+                  <Input
+                    v-if="(answers[question.id] || []).includes('__other__')"
+                    v-model="otherTexts[question.id]"
+                    placeholder="Tulis jawaban lainnya..."
+                    :disabled="isReadOnly"
+                    class="mt-2 rounded-xl bg-white/80 dark:bg-slate-950/50"
+                  />
                 </div>
               </div>
 

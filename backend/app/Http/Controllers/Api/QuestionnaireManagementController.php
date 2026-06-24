@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\QuestionnaireImportTemplateExport;
 use App\Exports\QuestionnaireResultExport;
+use App\Imports\QuestionnaireResponseImport;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\Questionnaire;
@@ -109,6 +111,7 @@ class QuestionnaireManagementController extends Controller
                         'type' => $q->type,
                         'options' => $q->options,
                         'is_required' => $q->is_required,
+                        'allow_other' => $q->allow_other,
                         'depends_on' => $q->depends_on,
                         'depends_value' => $q->depends_value,
                         'order' => $q->order,
@@ -214,6 +217,7 @@ class QuestionnaireManagementController extends Controller
                     'type' => $question->type,
                     'options' => $question->options,
                     'is_required' => $question->is_required,
+                    'allow_other' => $question->allow_other,
                     'order' => $question->order,
                     'section' => $question->section,
                     'depends_on' => null, // Will be remapped after
@@ -474,5 +478,45 @@ class QuestionnaireManagementController extends Controller
         }
 
         return $query->count();
+    }
+
+    public function downloadImportTemplate($id)
+    {
+        $questionnaire = Questionnaire::findOrFail($id);
+        $filename = 'Template_Import_Kuesioner_' . Str::slug($questionnaire->title) . '.xlsx';
+        return Excel::download(new QuestionnaireImportTemplateExport($id), $filename);
+    }
+
+    public function importExcel(Request $request, $id)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:5120'
+        ]);
+
+        $questionnaire = Questionnaire::findOrFail($id);
+
+        try {
+            Excel::import(new QuestionnaireResponseImport($id), $request->file('file'));
+            return response()->json([
+                'message' => 'Data berhasil diimport.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Gagal mengimport data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function clearResponses($id)
+    {
+        $questionnaire = Questionnaire::findOrFail($id);
+        
+        // This will cascade delete all associated answers due to foreign key constraints
+        \App\Models\Response::where('questionnaire_id', $questionnaire->id)->delete();
+
+        return response()->json([
+            'message' => 'Semua data responden berhasil dikosongkan.'
+        ]);
     }
 }

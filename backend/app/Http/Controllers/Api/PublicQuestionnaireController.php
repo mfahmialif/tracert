@@ -61,6 +61,7 @@ class PublicQuestionnaireController extends Controller
                             'type' => $q->type,
                             'options' => $q->options,
                             'is_required' => $q->is_required,
+                            'allow_other' => $q->allow_other,
                             'depends_on' => $q->depends_on,
                             'depends_value' => $q->depends_value,
                             'order' => $q->order,

@@ -41,6 +41,7 @@ const respondentInfo = ref({
   phone: "",
 });
 const answers = ref<Record<number, any>>({});
+const otherTexts = ref<Record<number, string>>({});
 
 onMounted(async () => {
   try {
@@ -91,10 +92,24 @@ async function handleSubmit() {
       respondent_email: respondentInfo.value.email,
       respondent_phone: respondentInfo.value.phone,
       answers: Object.entries(answers.value).map(
-        ([questionId, answerValue]) => ({
-          question_id: parseInt(questionId),
-          answer_value: answerValue,
-        })
+        ([questionId, answerValue]) => {
+          const qId = parseInt(questionId);
+          let resolvedValue = answerValue;
+
+          // Replace __other__ with actual typed text
+          if (answerValue === '__other__') {
+            resolvedValue = otherTexts.value[qId] || '';
+          } else if (Array.isArray(answerValue) && answerValue.includes('__other__')) {
+            resolvedValue = answerValue.map((v: string) =>
+              v === '__other__' ? (otherTexts.value[qId] || '') : v
+            ).filter((v: string) => v !== '');
+          }
+
+          return {
+            question_id: qId,
+            answer_value: resolvedValue,
+          };
+        }
       ),
     };
 
@@ -325,6 +340,25 @@ async function handleSubmit() {
                 />
                 <Label :for="`q${question.id}-${oIdx}`">{{ option }}</Label>
               </div>
+              <!-- Yang Lain option -->
+              <div
+                v-if="question.allow_other"
+                class="space-y-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-950/40"
+              >
+                <div class="flex items-center space-x-2">
+                  <RadioGroupItem
+                    :id="`q${question.id}-other`"
+                    value="__other__"
+                  />
+                  <Label :for="`q${question.id}-other`">Yang lain</Label>
+                </div>
+                <Input
+                  v-if="answers[question.id] === '__other__'"
+                  v-model="otherTexts[question.id]"
+                  placeholder="Tulis jawaban lainnya..."
+                  class="mt-2 rounded-xl"
+                />
+              </div>
             </RadioGroup>
 
             <!-- Checkbox -->
@@ -351,6 +385,38 @@ async function handleSubmit() {
                   "
                 />
                 <Label :for="`q${question.id}-${oIdx}`">{{ option }}</Label>
+              </div>
+              <!-- Yang Lain option -->
+              <div
+                v-if="question.allow_other"
+                class="space-y-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-slate-950/40"
+              >
+                <div class="flex items-center space-x-2">
+                  <Checkbox
+                    :id="`q${question.id}-other`"
+                    :checked="(answers[question.id] || []).includes('__other__')"
+                    @update:checked="
+                      (checked) => {
+                        if (!answers[question.id]) answers[question.id] = [];
+                        if (checked) {
+                          answers[question.id].push('__other__');
+                        } else {
+                          answers[question.id] = answers[question.id].filter(
+                            (v: string) => v !== '__other__'
+                          );
+                          otherTexts[question.id] = '';
+                        }
+                      }
+                    "
+                  />
+                  <Label :for="`q${question.id}-other`">Yang lain</Label>
+                </div>
+                <Input
+                  v-if="(answers[question.id] || []).includes('__other__')"
+                  v-model="otherTexts[question.id]"
+                  placeholder="Tulis jawaban lainnya..."
+                  class="mt-2 rounded-xl"
+                />
               </div>
             </div>
 

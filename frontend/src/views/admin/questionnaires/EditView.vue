@@ -31,6 +31,11 @@ import {
   Trash2,
   Edit2,
   GripVertical,
+  Copy,
+  X,
+  Circle,
+  Square,
+  Loader2,
 } from "lucide-vue-next";
 import draggable from "vuedraggable";
 
@@ -40,7 +45,8 @@ const id = route.params.id;
 
 const questionnaire = ref<any>(null);
 const loading = ref(true);
-const showQuestionModal = ref(false);
+const isSaving = ref(false);
+const activeQuestionId = ref<any>(null);
 const showDetailsModal = ref(false);
 const editingQuestion = ref<any>(null);
 const years = ref<any[]>([]);
@@ -63,7 +69,8 @@ const questionForm = ref({
   section: 1,
   type: "text",
   text: "",
-  options: "",
+  optionsList: ["Opsi 1"],
+  allow_other: false,
   is_required: true,
 });
 
@@ -85,13 +92,13 @@ async function fetchOptions() {
   }
 }
 
-async function fetchQuestionnaire() {
-  loading.value = true;
+async function fetchQuestionnaire(silent = false) {
+  if (!silent) loading.value = true;
   try {
     const response = await api.get(`/admin/questionnaires/${id}`);
     questionnaire.value = response.data.data;
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
   }
 }
 
@@ -117,7 +124,7 @@ async function handleSaveDetails() {
   try {
     await api.put(`/admin/questionnaires/${id}`, detailsForm.value);
     showDetailsModal.value = false;
-    fetchQuestionnaire();
+    fetchQuestionnaire(true);
   } catch (e) {
     console.error(e);
   }
@@ -125,18 +132,19 @@ async function handleSaveDetails() {
 
 function openEditQuestion(q: any) {
   editingQuestion.value = q;
+  activeQuestionId.value = q.id;
   questionForm.value = {
     section: q.section,
     type: q.type,
     text: q.text,
-    options: Array.isArray(q.options)
-      ? q.options.join("\n")
+    optionsList: Array.isArray(q.options)
+      ? [...q.options]
       : typeof q.options === "object" && q.options !== null
-        ? Object.values(q.options).join("\n")
-        : q.options,
+        ? Object.values(q.options)
+        : q.options ? [q.options] : [""],
+    allow_other: q.allow_other || false,
     is_required: q.is_required,
   };
-  showQuestionModal.value = true;
 }
 
 function resetForm() {
@@ -145,12 +153,107 @@ function resetForm() {
     section: 1,
     type: "text",
     text: "",
-    options: "",
+    optionsList: [""],
+    allow_other: false,
     is_required: true,
   };
 }
 
+function cancelEdit() {
+  if (editingQuestion.value && typeof editingQuestion.value.id === 'string' && editingQuestion.value.id.startsWith('temp')) {
+    fetchQuestionnaire(true);
+  }
+  activeQuestionId.value = null;
+  resetForm();
+}
+
+function addNewQuestion() {
+  const totalQuestions =
+    questionnaire.value?.sections?.reduce(
+      (acc: number, section: any) => acc + (section.questions?.length || 0),
+      0
+    ) || 0;
+
+  if (!questionnaire.value.sections) {
+    questionnaire.value.sections = [];
+  }
+  if (questionnaire.value.sections.length === 0) {
+    questionnaire.value.sections.push({ section: 1, questions: [] });
+  }
+  
+  const targetSection = questionnaire.value.sections[questionnaire.value.sections.length - 1];
+  
+  const tempId = `temp_${Date.now()}`;
+  const newQ = {
+    id: tempId,
+    section: targetSection.section,
+    type: "radio",
+    text: "",
+    options: [""],
+    allow_other: false,
+    is_required: true,
+    order: totalQuestions + 1,
+  };
+  
+  targetSection.questions.push(newQ);
+  openEditQuestion(newQ);
+}
+
+function addNewSection() {
+  const totalQuestions =
+    questionnaire.value?.sections?.reduce(
+      (acc: number, section: any) => acc + (section.questions?.length || 0),
+      0
+    ) || 0;
+
+  if (!questionnaire.value.sections) {
+    questionnaire.value.sections = [];
+  }
+  
+  const maxSection = questionnaire.value.sections.reduce((max: number, section: any) => {
+    return Math.max(max, section.section);
+  }, 0);
+  
+  const newSectionNumber = maxSection + 1;
+  
+  questionnaire.value.sections.push({ section: newSectionNumber, questions: [] });
+  
+  const tempId = `temp_${Date.now()}`;
+  const newQ = {
+    id: tempId,
+    section: newSectionNumber,
+    type: "radio",
+    text: "",
+    options: [""],
+    allow_other: false,
+    is_required: true,
+    order: totalQuestions + 1,
+  };
+  
+  questionnaire.value.sections[questionnaire.value.sections.length - 1].questions.push(newQ);
+  openEditQuestion(newQ);
+}
+
+async function handleDuplicateQuestion(q: any) {
+  try {
+    await api.post(`/admin/questionnaires/${id}/questions`, {
+      section: q.section,
+      type: q.type,
+      question_text: q.text + " (Duplikat)",
+      options: q.options,
+      allow_other: q.allow_other,
+      is_required: q.is_required,
+      order: q.order + 1,
+      questionnaire_id: id,
+    });
+    fetchQuestionnaire(true);
+  } catch (e) {
+    console.error("Failed to duplicate", e);
+  }
+}
+
 async function handleSaveQuestion() {
+  isSaving.value = true;
   // Calculate order (simple auto-increment based on total questions)
   const totalQuestions =
     questionnaire.value?.sections?.reduce(
@@ -164,25 +267,25 @@ async function handleSaveQuestion() {
     order: editingQuestion.value
       ? editingQuestion.value.order
       : totalQuestions + 1,
-    options: questionForm.value.options
-      ? questionForm.value.options.split("\n").filter((o) => o.trim())
+    options: questionForm.value.optionsList
+      ? questionForm.value.optionsList.filter((o) => o.trim())
       : null,
     questionnaire_id: id,
   };
 
   try {
-    if (editingQuestion.value) {
-      // For update, we might also need to ensure question_text is sent if backend requires it
+    if (editingQuestion.value && typeof editingQuestion.value.id === 'number') {
       await api.put(`/admin/questions/${editingQuestion.value.id}`, payload);
     } else {
-      // Use correct nested endpoint for creation
       await api.post(`/admin/questionnaires/${id}/questions`, payload);
     }
-    showQuestionModal.value = false;
-    fetchQuestionnaire();
+    activeQuestionId.value = null;
+    fetchQuestionnaire(true);
     resetForm();
   } catch (e) {
     console.error(e);
+  } finally {
+    isSaving.value = false;
   }
 }
 
@@ -190,7 +293,7 @@ async function handleDeleteQuestion(qId: number) {
   if (!confirm("Hapus pertanyaan ini?")) return;
   try {
     await api.delete(`/admin/questions/${qId}`);
-    fetchQuestionnaire();
+    fetchQuestionnaire(true);
   } catch (e) {
     console.error(e);
   }
@@ -250,89 +353,7 @@ async function handleReorder() {
             </p>
           </div>
         </div>
-
-        <!-- Question Modal Trigger -->
-        <Dialog v-model:open="showQuestionModal">
-          <DialogTrigger as-child>
-            <Button class="h-11 rounded-2xl bg-emerald-600 px-5 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700" @click="resetForm"
-              ><Plus class="mr-2 h-4 w-4" /> Tambah Pertanyaan</Button
-            >
-          </DialogTrigger>
-          <DialogContent class="sm:max-w-[500px]">
-            <!-- ... existing question modal content ... -->
-            <DialogHeader>
-              <DialogTitle>{{
-                editingQuestion ? "Edit Pertanyaan" : "Tambah Pertanyaan"
-              }}</DialogTitle>
-            </DialogHeader>
-            <div class="grid gap-4 py-4">
-              <div class="grid grid-cols-2 gap-4">
-                <div class="space-y-2">
-                  <Label>Section</Label>
-                  <Input type="number" v-model="questionForm.section" min="1" />
-                </div>
-                <div class="space-y-2">
-                  <Label>Tipe</Label>
-                  <Select v-model="questionForm.type">
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="text">Teks Singkat</SelectItem>
-                      <SelectItem value="textarea">Uraian</SelectItem>
-                      <SelectItem value="radio"
-                        >Pilihan Ganda (Radio)</SelectItem
-                      >
-                      <SelectItem value="checkbox">Kotak Centang</SelectItem>
-                      <SelectItem value="scale">Skala Likert</SelectItem>
-                      <SelectItem value="select">Dropdown</SelectItem>
-                      <SelectItem value="date">Tanggal</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <Label>Pertanyaan</Label>
-                <Textarea
-                  v-model="questionForm.text"
-                  placeholder="Tulis pertanyaan..."
-                  rows="2"
-                />
-              </div>
-
-              <div
-                class="space-y-2"
-                v-if="
-                  ['radio', 'checkbox', 'select', 'scale'].includes(
-                    questionForm.type
-                  )
-                "
-              >
-                <Label>Opsi Jawaban (pisahkan dengan baris baru)</Label>
-                <Textarea
-                  v-model="questionForm.options"
-                  placeholder="Opsi 1&#10;Opsi 2&#10;Opsi 3"
-                  rows="4"
-                />
-              </div>
-
-              <div class="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="req"
-                  v-model="questionForm.is_required"
-                  class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <Label for="req">Wajib Diisi</Label>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="secondary" @click="showQuestionModal = false"
-                >Batal</Button
-              >
-              <Button @click="handleSaveQuestion">Simpan</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        </div>
 
         <!-- Edit Details Modal -->
         <Dialog v-model:open="showDetailsModal">
@@ -377,7 +398,7 @@ async function handleReorder() {
                       type="checkbox"
                       :checked="detailsForm.prodi_ids.includes(prodi.id)"
                       @change="
-                        (e) => {
+                        (e: any) => {
                           if (e.target.checked)
                             detailsForm.prodi_ids.push(prodi.id);
                           else
@@ -426,8 +447,8 @@ async function handleReorder() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
+
 
       <!-- Question List -->
       <div v-if="loading" class="flex justify-center py-12">
@@ -455,16 +476,129 @@ async function handleReorder() {
               handle=".cursor-move"
             >
               <template #item="{ element: q }">
-                <div
-                  class="group relative flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white/70 p-4 transition-colors hover:bg-emerald-50/60 dark:border-white/10 dark:bg-slate-950/35 dark:hover:bg-white/[0.07]"
+                <div>
+                  <!-- INLINE EDITOR -->
+                  <div v-if="activeQuestionId === q.id" class="rounded-2xl border-t-8 border-t-emerald-600 border-x border-b border-slate-200 bg-white shadow-xl dark:bg-slate-900 overflow-hidden w-full my-4">
+                  <div class="px-6 py-6 space-y-6">
+                    <!-- Header Form -->
+                    <div class="flex items-start gap-6">
+                      <div class="flex-1">
+                        <Input
+                          v-model="questionForm.text"
+                          placeholder="Pertanyaan tanpa judul"
+                          class="text-2xl font-medium border-0 border-b-2 rounded-none px-1 h-12 focus-visible:ring-0 focus-visible:border-emerald-600 bg-transparent shadow-none"
+                        />
+                      </div>
+                      <div class="w-1/3">
+                        <Select v-model="questionForm.type">
+                          <SelectTrigger class="h-12 rounded-xl">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Teks Singkat</SelectItem>
+                            <SelectItem value="textarea">Uraian</SelectItem>
+                            <SelectItem value="radio">Pilihan Ganda (Radio)</SelectItem>
+                            <SelectItem value="checkbox">Kotak Centang</SelectItem>
+                            <SelectItem value="scale">Skala Likert</SelectItem>
+                            <SelectItem value="select">Dropdown</SelectItem>
+                            <SelectItem value="date">Tanggal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <!-- Section & Options -->
+                    <div class="space-y-4">
+                      <div class="flex items-center gap-2">
+                        <Label class="text-xs uppercase font-bold text-muted-foreground tracking-wider">Bagian (Section)</Label>
+                        <Input type="number" v-model="questionForm.section" min="1" class="w-20 h-8 rounded-lg" />
+                      </div>
+
+                      <!-- Dynamic Options -->
+                      <div v-if="['radio', 'checkbox', 'select', 'scale'].includes(questionForm.type)" class="space-y-3 pt-2">
+                        <div v-for="(opt, idx) in questionForm.optionsList" :key="idx" class="flex items-center gap-3 group">
+                          <Circle v-if="questionForm.type === 'radio'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                          <Square v-else-if="questionForm.type === 'checkbox'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                          <span v-else class="text-sm font-medium w-5 text-center shrink-0">{{ idx + 1 }}.</span>
+                          
+                          <Input 
+                            v-model="questionForm.optionsList[idx]" 
+                            class="border-0 border-b hover:border-b-2 focus-visible:ring-0 focus-visible:border-emerald-600 rounded-none bg-transparent shadow-none h-10 px-1 transition-all" 
+                            :placeholder="'Opsi ' + (idx + 1)" 
+                          />
+                          
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            @click="questionForm.optionsList.splice(idx, 1)" 
+                            :disabled="questionForm.optionsList.length <= 1" 
+                            class="text-muted-foreground hover:text-destructive h-8 w-8 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                          >
+                            <X class="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <!-- Add Option row -->
+                        <div class="flex items-center gap-3">
+                          <Circle v-if="questionForm.type === 'radio'" class="h-5 w-5 text-muted-foreground/30 shrink-0" />
+                          <Square v-else-if="questionForm.type === 'checkbox'" class="h-5 w-5 text-muted-foreground/30 shrink-0" />
+                          <span v-else class="text-sm font-medium w-5 text-center text-muted-foreground/30 shrink-0">{{ questionForm.optionsList.length + 1 }}.</span>
+                          
+                          <div class="flex items-center flex-wrap gap-1 text-sm h-10">
+                            <button @click="questionForm.optionsList.push('')" class="text-muted-foreground hover:border-b hover:border-muted-foreground transition-all">Tambah opsi</button>
+                            <span v-if="['radio', 'checkbox'].includes(questionForm.type) && !questionForm.allow_other" class="text-muted-foreground px-1"> atau </span>
+                            <button v-if="['radio', 'checkbox'].includes(questionForm.type) && !questionForm.allow_other" @click="questionForm.allow_other = true" class="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2 py-1 rounded-md font-medium transition-colors">Tambahkan "Yang Lain"</button>
+                          </div>
+                        </div>
+
+                        <!-- Yang Lain Row -->
+                        <div v-if="questionForm.allow_other" class="flex items-center gap-3 group">
+                          <Circle v-if="questionForm.type === 'radio'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                          <Square v-else-if="questionForm.type === 'checkbox'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                          
+                          <Input value="Yang lain: ........." readonly class="border-0 border-b rounded-none bg-transparent text-muted-foreground italic shadow-none h-10 px-1 pointer-events-none" />
+                          
+                          <Button variant="ghost" size="icon" @click="questionForm.allow_other = false" class="text-muted-foreground hover:text-destructive h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <X class="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Toolbar/Footer -->
+                  <div class="border-t bg-slate-50/50 dark:bg-slate-900/20 px-6 py-4 flex flex-row items-center justify-between sm:justify-between w-full">
+                    <div class="flex items-center gap-2">
+                      <div class="flex items-center gap-2 border-r pr-4">
+                        <Label for="req" class="text-sm font-medium cursor-pointer">Wajib diisi</Label>
+                        <div class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" id="req" v-model="questionForm.is_required" class="sr-only peer">
+                          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-600"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <Button variant="ghost" @click="cancelEdit" class="rounded-xl">Batal</Button>
+                      <Button @click="handleSaveQuestion" :disabled="isSaving" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 font-medium">
+                        <Loader2 v-if="isSaving" class="mr-2 h-4 w-4 animate-spin" />
+                        {{ isSaving ? 'Menyimpan...' : 'Simpan' }}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- READ-ONLY CARD -->
+                <div v-else
+                  @click="openEditQuestion(q)"
+                  class="cursor-pointer group relative flex items-start gap-4 rounded-2xl border border-slate-200/80 bg-white/70 p-4 transition-colors hover:bg-emerald-50/60 dark:border-white/10 dark:bg-slate-950/35 dark:hover:bg-white/[0.07]"
                 >
                   <GripVertical
                     class="h-5 w-5 text-muted-foreground mt-1 cursor-move opacity-0 group-hover:opacity-100"
                   />
                   <div class="flex-1 space-y-1">
                     <div class="flex items-start justify-between">
-                      <p class="font-medium">
-                        {{ q.text }}
+                      <p class="font-medium" :class="{'text-muted-foreground italic': !q.text}">
+                        {{ q.text || 'Pertanyaan tanpa judul' }}
                         <span v-if="q.is_required" class="text-destructive"
                           >*</span
                         >
@@ -475,9 +609,22 @@ async function handleReorder() {
                     </div>
                     <div
                       v-if="['radio', 'checkbox', 'select'].includes(q.type)"
-                      class="text-sm text-muted-foreground pl-2 border-l-2"
+                      class="mt-4 space-y-3"
                     >
-                      <div v-for="opt in q.options" :key="opt">• {{ opt }}</div>
+                      <div v-for="(opt, idx) in q.options" :key="idx" class="flex items-center gap-3">
+                        <Circle v-if="q.type === 'radio'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                        <Square v-else-if="q.type === 'checkbox'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                        <span v-else-if="q.type === 'select'" class="text-sm font-medium w-5 text-center shrink-0">{{ idx + 1 }}.</span>
+                        <span class="text-base text-slate-700 dark:text-slate-300">{{ opt || `Opsi ${idx + 1}` }}</span>
+                      </div>
+                      <div v-if="q.allow_other" class="flex items-center gap-3">
+                        <Circle v-if="q.type === 'radio'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                        <Square v-else-if="q.type === 'checkbox'" class="h-5 w-5 text-muted-foreground/50 shrink-0" />
+                        <div class="flex items-center gap-2 w-full max-w-sm">
+                          <span class="text-base text-slate-700 dark:text-slate-300 whitespace-nowrap">Yang lain:</span>
+                          <div class="border-b border-muted-foreground/40 w-full h-5"></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div
@@ -486,22 +633,39 @@ async function handleReorder() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      @click="openEditQuestion(q)"
+                      @click.stop="handleDuplicateQuestion(q)"
+                      title="Duplikat Pertanyaan"
+                      ><Copy class="h-4 w-4"
+                    /></Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      @click.stop="openEditQuestion(q)"
+                      title="Edit Pertanyaan"
                       ><Edit2 class="h-4 w-4"
                     /></Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       class="text-destructive hover:text-destructive"
-                      @click="handleDeleteQuestion(q.id)"
+                      @click.stop="handleDeleteQuestion(q.id)"
                       ><Trash2 class="h-4 w-4"
                     /></Button>
                   </div>
+                </div>
                 </div>
               </template>
             </draggable>
           </CardContent>
         </Card>
+        
+        <!-- Action Buttons at Bottom -->
+        <div class="flex flex-col md:flex-row justify-center items-center gap-4 py-8">
+          <Button variant="outline" class="h-12 rounded-2xl border-emerald-200 text-emerald-700 px-6 font-bold hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30 shadow-sm" @click="addNewSection"
+              ><Plus class="mr-2 h-5 w-5" /> Tambah Bagian</Button>
+          <Button class="h-12 rounded-2xl bg-emerald-600 px-6 font-bold shadow-lg shadow-emerald-700/20 hover:bg-emerald-700" @click="addNewQuestion"
+              ><Plus class="mr-2 h-5 w-5" /> Tambah Pertanyaan</Button>
+        </div>
       </div>
     </div>
   </AdminLayout>

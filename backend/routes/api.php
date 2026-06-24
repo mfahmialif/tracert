@@ -78,6 +78,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/questionnaires/{questionnaireId}/questions/{questionId}/respondents', [QuestionnaireManagementController::class, 'questionRespondents']);
         Route::get('/questionnaires/{id}/export/excel', [QuestionnaireManagementController::class, 'exportExcel']);
         Route::get('/questionnaires/{id}/export/pdf', [QuestionnaireManagementController::class, 'exportPdf']);
+        Route::get('/questionnaires/{id}/import/template', [QuestionnaireManagementController::class, 'downloadImportTemplate'])
+            ->middleware('role:superadmin');
+        Route::post('/questionnaires/{id}/import', [QuestionnaireManagementController::class, 'importExcel'])
+            ->middleware('role:superadmin');
+        Route::delete('/questionnaires/{id}/responses/clear', [QuestionnaireManagementController::class, 'clearResponses'])
+            ->middleware('role:superadmin');
         Route::post('/questionnaires/{id}/duplicate', [QuestionnaireManagementController::class, 'duplicate']);
 
         Route::post('/questionnaires/{questionnaire}/generate-responses', [GeneratedResponseController::class, 'store'])

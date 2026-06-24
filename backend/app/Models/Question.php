@@ -14,6 +14,7 @@ class Question extends Model
         'type',
         'options',
         'is_required',
+        'allow_other',
         'order',
         'section',
         'depends_on',
@@ -23,6 +24,7 @@ class Question extends Model
     protected $casts = [
         'options' => 'array',
         'is_required' => 'boolean',
+        'allow_other' => 'boolean',
     ];
 
     public function questionnaire(): BelongsTo

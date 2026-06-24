@@ -26,6 +26,9 @@ import {
   FileChartPie,
   RefreshCw,
   WandSparkles,
+  Upload,
+  Download,
+  Trash2,
 } from "lucide-vue-next";
 import {
   Chart as ChartJS,
@@ -60,10 +63,15 @@ const results = ref<any[]>([]);
 const questionnaireIsPublic = ref(true);
 const totalAlumniCount = ref<number | null>(null);
 const availableAlumniCount = ref<number | null>(null);
-const exporting = ref<"excel" | "pdf" | null>(null);
+const exporting = ref<"excel" | "pdf" | "template" | null>(null);
+const importModalOpen = ref(false);
+const importFile = ref<File | null>(null);
+const importing = ref(false);
 const generatorOpen = ref(false);
 const generating = ref(false);
 const generatorApiError = ref("");
+const clearModalOpen = ref(false);
+const clearing = ref(false);
 
 type OptionCount = { option: string; count: number };
 type Distribution = { question_id: number; option_counts: OptionCount[] };
@@ -354,6 +362,78 @@ function handleExportChartPdf() {
   html2pdf().set(opt).from(element).save();
 }
 
+function handleFileChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  if (target.files?.length) {
+    importFile.value = target.files[0];
+  }
+}
+
+async function handleDownloadTemplate() {
+  exporting.value = "template";
+  try {
+    const response = await api.get(`/admin/questionnaires/${route.params.id}/import/template`, {
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Template_Import_Kuesioner.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Failed to download template", error);
+    toast.error("Gagal mengunduh template");
+  } finally {
+    exporting.value = null;
+  }
+}
+
+async function handleImportSubmit() {
+  if (!importFile.value) {
+    toast.error("Pilih file Excel terlebih dahulu");
+    return;
+  }
+  
+  importing.value = true;
+  const formData = new FormData();
+  formData.append("file", importFile.value);
+  
+  try {
+    await api.post(`/admin/questionnaires/${route.params.id}/import`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    toast.success("Data berhasil diimport");
+    importModalOpen.value = false;
+    importFile.value = null;
+    fetchResults();
+  } catch (error: any) {
+    console.error("Failed to import data", error);
+    toast.error(error.response?.data?.message || "Gagal mengimport data");
+  } finally {
+    importing.value = false;
+  }
+}
+
+async function handleClearResponses() {
+  clearing.value = true;
+  try {
+    await api.delete(`/admin/questionnaires/${route.params.id}/responses/clear`);
+    toast.success("Semua data responden berhasil dikosongkan.");
+    clearModalOpen.value = false;
+    fetchResults();
+  } catch (error: any) {
+    console.error("Failed to clear responses", error);
+    toast.error(error.response?.data?.message || "Gagal mengosongkan data.");
+  } finally {
+    clearing.value = false;
+  }
+}
+
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -409,14 +489,97 @@ const chartOptions = {
         <Button variant="outline" @click="handleExportChartPdf">
           <FileChartPie class="mr-2 h-4 w-4" /> Export PDF Grafik
         </Button>
+        
+        <div v-if="authStore.isSuperAdmin" class="w-px h-10 bg-border mx-2 hidden sm:block"></div>
+        
         <Button
           v-if="authStore.isSuperAdmin"
-          class="bg-emerald-600 text-white hover:bg-emerald-700"
+          variant="outline"
+          :disabled="exporting !== null"
+          @click="handleDownloadTemplate"
+          class="border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
+        >
+          <RefreshCw v-if="exporting === 'template'" class="mr-2 h-4 w-4 animate-spin" />
+          <Download v-else class="mr-2 h-4 w-4" />
+          Template Import
+        </Button>
+        <Button
+          v-if="authStore.isSuperAdmin"
+          variant="default"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white"
+          @click="importModalOpen = true"
+        >
+          <Upload class="mr-2 h-4 w-4" /> Import Excel
+        </Button>
+
+        <Button
+          v-if="authStore.isSuperAdmin"
+          class="bg-blue-600 text-white hover:bg-blue-700 ml-auto"
           @click="openGenerator"
         >
           <WandSparkles class="mr-2 h-4 w-4" /> Generate Responden
         </Button>
+
+        <Button
+          v-if="authStore.isSuperAdmin"
+          variant="destructive"
+          @click="clearModalOpen = true"
+        >
+          <Trash2 class="mr-2 h-4 w-4" /> Kosongkan Responden
+        </Button>
       </div>
+
+      <Dialog v-model:open="importModalOpen">
+        <DialogScrollContent class="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Data Kuesioner</DialogTitle>
+            <DialogDescription>
+              Silakan unggah file Excel yang sudah diisi berdasarkan format template import. 
+              Gunakan tombol "Template Import" untuk mengunduh kerangka format yang benar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div class="space-y-4 py-4">
+            <div class="grid gap-2">
+              <Label for="file">File Excel (.xlsx)</Label>
+              <Input
+                id="file"
+                type="file"
+                accept=".xlsx, .xls, .csv"
+                @change="handleFileChange"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" @click="importModalOpen = false">Batal</Button>
+            <Button :disabled="importing || !importFile" @click="handleImportSubmit" class="bg-emerald-600 hover:bg-emerald-700">
+              <RefreshCw v-if="importing" class="mr-2 h-4 w-4 animate-spin" />
+              {{ importing ? 'Mengimport...' : 'Import Data' }}
+            </Button>
+          </DialogFooter>
+        </DialogScrollContent>
+      </Dialog>
+
+      <Dialog v-model:open="clearModalOpen">
+        <DialogScrollContent class="max-w-md">
+          <DialogHeader>
+            <DialogTitle class="text-destructive">Kosongkan Semua Responden?</DialogTitle>
+            <DialogDescription>
+              Tindakan ini akan menghapus <strong>seluruh data jawaban responden</strong> untuk kuesioner ini secara permanen. 
+              Data yang dihapus tidak dapat dikembalikan.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter class="mt-4">
+            <Button variant="outline" @click="clearModalOpen = false" :disabled="clearing">Batal</Button>
+            <Button variant="destructive" @click="handleClearResponses" :disabled="clearing">
+              <RefreshCw v-if="clearing" class="mr-2 h-4 w-4 animate-spin" />
+              {{ clearing ? 'Menghapus...' : 'Ya, Hapus Semua Data' }}
+            </Button>
+          </DialogFooter>
+        </DialogScrollContent>
+      </Dialog>
 
       <Dialog v-model:open="generatorOpen">
         <DialogScrollContent class="max-w-5xl">
