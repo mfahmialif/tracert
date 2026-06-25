@@ -48,6 +48,22 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function loginAlumni(nim: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.post('/login-alumni', { nim })
+      user.value = response.data.user
+      localStorage.setItem('auth_token', response.data.token)
+      return true
+    } catch (e: any) {
+      error.value = e.response?.data?.message || 'Login gagal'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function logout() {
     try {
       await api.post('/logout')
@@ -78,6 +94,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAlumni,
     roleName,
     login,
+    loginAlumni,
     logout,
     fetchUser,
   }

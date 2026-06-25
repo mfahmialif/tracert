@@ -12,7 +12,13 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LoginView.vue'),
+      component: () => import('../views/AlumniLoginView.vue'),
+      meta: { guest: true },
+    },
+    {
+      path: '/login-admin',
+      name: 'login-admin',
+      component: () => import('../views/AdminLoginView.vue'),
       meta: { guest: true },
     },
     {

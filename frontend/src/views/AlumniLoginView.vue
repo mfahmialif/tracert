@@ -31,14 +31,12 @@ const authStore = useAuthStore();
 const { isDark, toggleTheme } = useTheme();
 const logoImage = "/logo_uiidalwa.png";
 
-const username = ref("");
-const password = ref("");
-const showPassword = ref(false);
+const nim = ref("");
 
 async function handleLogin() {
-  const success = await authStore.login(username.value, password.value);
+  const success = await authStore.loginAlumni(nim.value);
   if (success) {
-    router.push(authStore.isAdmin ? "/admin" : "/home");
+    router.push("/home");
   }
 }
 </script>
@@ -91,14 +89,13 @@ async function handleLogin() {
         </div>
         <div class="space-y-5">
           <h1 class="max-w-2xl text-5xl font-black tracking-tight md:text-6xl">
-            Masuk ke platform
+            Selamat Datang di Portal Alumni
             <span class="block bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 bg-clip-text text-transparent dark:from-emerald-300 dark:via-teal-300 dark:to-lime-300">
               Tracer Study UII Dalwa.
             </span>
           </h1>
           <p class="max-w-xl text-lg leading-8 text-slate-600 dark:text-slate-300">
-            Akses dashboard admin dan alumni untuk mengelola kuesioner, memantau
-            data lulusan, serta membaca insight institusi secara rapi.
+            Akses dashboard alumni untuk mengelola kuesioner dan memberikan feedback berharga bagi almamater tercinta.
           </p>
         </div>
         <div class="grid max-w-xl gap-4 sm:grid-cols-2">
@@ -131,49 +128,23 @@ async function handleLogin() {
         <CardTitle
           class="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-700 bg-clip-text text-3xl font-black tracking-tight text-transparent dark:from-emerald-300 dark:via-teal-300 dark:to-lime-300"
         >
-          Tracer Study
+          Portal Alumni
         </CardTitle>
         <CardDescription class="text-slate-600 dark:text-slate-300">
-          Silakan login untuk melanjutkan
+          Silakan masukkan NIM untuk masuk
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="space-y-2">
-            <Label for="username">Username / NIM</Label>
+            <Label for="nim">Nomor Induk Mahasiswa (NIM)</Label>
             <Input
-              id="username"
-              v-model="username"
-              placeholder="Masukkan username"
+              id="nim"
+              v-model="nim"
+              placeholder="Masukkan NIM Anda"
               required
               class="h-12 rounded-2xl bg-white/70 dark:bg-slate-950/50"
             />
-          </div>
-          <div class="space-y-2">
-            <Label for="password">Password</Label>
-            <div class="relative">
-              <Input
-                id="password"
-                v-model="password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="Masukkan password"
-                required
-                class="h-12 rounded-2xl bg-white/70 pr-10 dark:bg-slate-950/50"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                class="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                @click="showPassword = !showPassword"
-              >
-                <EyeOff
-                  v-if="showPassword"
-                  class="h-4 w-4 text-muted-foreground"
-                />
-                <Eye v-else class="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </div>
           </div>
 
           <Alert v-if="authStore.error" variant="destructive">

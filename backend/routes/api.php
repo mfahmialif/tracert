@@ -25,6 +25,7 @@ Route::prefix('public')->group(function () {
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login-alumni', [AuthController::class, 'loginAlumni']);
 
 // Protected routes
 Route::middleware(['auth:sanctum'])->group(function () {

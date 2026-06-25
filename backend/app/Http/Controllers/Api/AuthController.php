@@ -37,6 +37,34 @@ class AuthController extends Controller
         ]);
     }
 
+    public function loginAlumni(Request $request)
+    {
+        $request->validate([
+            'nim' => 'required|string',
+        ]);
+
+        $user = User::whereHas('alumni', function($query) use ($request) {
+            $query->where('nim', $request->nim);
+        })->first();
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'nim' => ['NIM tidak ditemukan.'],
+            ]);
+        }
+
+        // Create personal access token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $user->load(['role', 'alumni.prodi', 'alumni.year']);
+
+        return response()->json([
+            'message' => 'Login berhasil',
+            'user' => $this->formatUser($user),
+            'token' => $token,
+        ]);
+    }
+
     public function logout(Request $request)
     {
         // Revoke current token

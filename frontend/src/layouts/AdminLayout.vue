@@ -80,7 +80,7 @@ async function handleLogout() {
     </div>
 
     <header
-      class="sticky top-0 z-40 w-full border-b border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/76"
+      class="sticky top-0 z-40 w-full border-b border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-md md:backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/80"
     >
       <div class="mx-auto flex h-[4.5rem] max-w-[1440px] items-center justify-between px-4 md:h-20 md:px-6">
         <Sheet>
