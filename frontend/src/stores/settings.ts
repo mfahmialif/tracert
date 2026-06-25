@@ -16,7 +16,8 @@ export const useSettingsStore = defineStore('settings', {
       return state.settings[key];
     },
     isAlumniStatusEnabled: (state) => {
-      return state.settings['enable_alumni_status'] === 'true';
+      const val = state.settings['enable_alumni_status'];
+      return val === 'true' || val === '1' || val === true;
     }
   },
   actions: {
@@ -32,15 +33,8 @@ export const useSettingsStore = defineStore('settings', {
       }
     },
     async updateSettings(newSettings: Record<string, string>) {
-      try {
-        await api.post('/admin/settings', { settings: newSettings });
-        // Update local state
-        this.settings = { ...this.settings, ...newSettings };
-        return true;
-      } catch (error) {
-        console.error('Failed to update settings', error);
-        throw error;
-      }
+      await api.post('/admin/settings', { settings: newSettings });
+      this.settings = { ...this.settings, ...newSettings };
     }
   }
 });
