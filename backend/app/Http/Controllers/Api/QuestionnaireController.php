@@ -26,7 +26,7 @@ class QuestionnaireController extends Controller
         $baseQuery = Questionnaire::open();
         $baseQuery->whereHas('prodis', function ($q) use ($alumni) {
             $q->where('prodis.id', $alumni->prodi_id);
-        });
+        })->where('year_id', $alumni->year_id);
 
         $total = $baseQuery->count();
 
@@ -57,11 +57,11 @@ class QuestionnaireController extends Controller
             ->open()
             ->withCount('questions');
 
-        // Filter by alumni's prodi if alumni exists
+        // Filter by alumni's prodi and year if alumni exists
         if ($alumni) {
             $query->whereHas('prodis', function ($q) use ($alumni) {
                 $q->where('prodis.id', $alumni->prodi_id);
-            });
+            })->where('year_id', $alumni->year_id);
         }
 
         // Filter by Status

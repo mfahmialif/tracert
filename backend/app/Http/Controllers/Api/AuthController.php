@@ -28,7 +28,7 @@ class AuthController extends Controller
         // Create personal access token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        $user->load(['role', 'alumni.prodi']);
+        $user->load(['role', 'alumni.prodi', 'alumni.year']);
 
         return response()->json([
             'message' => 'Login berhasil',
@@ -48,7 +48,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
-        $user->load(['role', 'alumni.prodi']);
+        $user->load(['role', 'alumni.prodi', 'alumni.year']);
 
         return response()->json([
             'user' => $this->formatUser($user),
@@ -72,7 +72,7 @@ class AuthController extends Controller
                     'id' => $user->alumni->prodi->prodi_id,
                     'nama' => $user->alumni->prodi->nama_prodi,
                 ] : null,
-                'tahun_lulus' => $user->alumni->tahun_lulus,
+                'tahun_lulus' => $user->alumni->year ? $user->alumni->year->name : null,
             ] : null,
         ];
     }
