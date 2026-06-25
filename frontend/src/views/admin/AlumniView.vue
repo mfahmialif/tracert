@@ -60,7 +60,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { toast } from "vue-sonner";
+import { useSettingsStore } from '@/stores/settings';
 
+const settingsStore = useSettingsStore();
 const router = useRouter();
 const alumni = ref<any[]>([]);
 const loading = ref(false);
@@ -113,7 +115,7 @@ const sorting = ref([{ id: "created_at", desc: true }]);
 
 const columnHelper = createColumnHelper<any>();
 
-const columns = [
+const baseColumns = [
   columnHelper.display({
     id: "no",
     header: "No",
@@ -166,19 +168,35 @@ const columns = [
     },
     cell: (info) => info.getValue() || "-",
   }),
-  columnHelper.accessor("status", {
-    header: "Status",
-    cell: (info) => {
-      const status = info.getValue();
-      const variant =
-        status === "Bekerja"
-          ? "default" // Blue/Primary for working
-          : status === "Mencari Kerja"
-            ? "destructive"
-            : "secondary";
-      return h(Badge, { variant }, () => status || "Unknown");
-    },
+  columnHelper.accessor("no_hp", {
+    header: "No. HP",
+    cell: (info) => info.getValue() || "-",
   }),
+];
+
+// Dynamically add Status column if enabled
+if (settingsStore.isAlumniStatusEnabled) {
+  baseColumns.push(
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => {
+        const status = info.getValue();
+        const variant =
+          status === "Bekerja"
+            ? "default" // Blue/Primary for working
+            : status === "Wirausaha"
+            ? "secondary" // Gray/Secondary for entrepreneur
+            : status === "Studi Lanjut"
+            ? "outline" // Outline for further studies
+            : "destructive"; // Red for looking for job/unemployed
+
+        return h(Badge, { variant, class: "rounded-lg" }, () => status || "Unknown");
+      },
+    })
+  );
+}
+
+baseColumns.push(
   columnHelper.display({
     id: "actions",
     cell: ({ row }) => {
@@ -229,14 +247,14 @@ const columns = [
         }
       );
     },
-  }),
-];
+  })
+);
 
 const table = useVueTable({
   get data() {
     return alumni.value;
   },
-  columns,
+  columns: baseColumns,
   getCoreRowModel: getCoreRowModel(),
   manualPagination: true,
   manualSorting: true,
@@ -249,10 +267,9 @@ const selectedStatus = ref("");
 const prodis = ref<any[]>([]);
 const years = ref<any[]>([]);
 
-onMounted(() => {
-  fetchProdis();
-  fetchYears(); // Add fetchYears
-  fetchAlumni();
+onMounted(async () => {
+  await settingsStore.fetchSettings();
+  await Promise.all([fetchProdis(), fetchYears(), fetchAlumni()]);
 });
 
 async function fetchProdis() {
@@ -604,7 +621,7 @@ async function handleExport() {
             </SelectContent>
           </Select>
 
-          <Select v-model="selectedStatus" @update:model-value="fetchAlumni">
+          <Select v-if="settingsStore.isAlumniStatusEnabled" v-model="selectedStatus" @update:model-value="fetchAlumni">
             <SelectTrigger class="h-12 w-full rounded-2xl bg-white/70 dark:bg-slate-950/40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -673,7 +690,7 @@ async function handleExport() {
               </template>
               <template v-else>
                 <TableRow>
-                  <TableCell :colspan="columns.length" class="h-24 text-center">
+                  <TableCell :colspan="baseColumns.length" class="h-24 text-center">
                     <div v-if="loading" class="flex justify-center">
                       <div
                         class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"

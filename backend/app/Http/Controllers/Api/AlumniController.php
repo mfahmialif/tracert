@@ -72,15 +72,22 @@ class AlumniController extends Controller
 
     private function storeLogic($request)
     {
-        $validated = $request->validate([
+        $isStatusEnabled = \App\Models\Setting::where('key', 'enable_alumni_status')->value('value') === 'true';
+
+        $rules = [
             'nim' => 'required|string|max:20|unique:alumni,nim',
             'nama' => 'required|string|max:100',
             'prodi_id' => 'required|exists:prodis,id',
             'year_id' => 'required|exists:years,id',
             'email' => 'required|email|max:255',
             'no_hp' => 'nullable|string|max:20',
-            'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',
-        ]);
+        ];
+
+        if ($isStatusEnabled) {
+            $rules['status'] = 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja';
+        }
+
+        $validated = $request->validate($rules);
 
         try {
             \Illuminate\Support\Facades\DB::beginTransaction();
@@ -118,15 +125,22 @@ class AlumniController extends Controller
     {
         $alumni = Alumni::findOrFail($id);
 
-        $validated = $request->validate([
+        $isStatusEnabled = \App\Models\Setting::where('key', 'enable_alumni_status')->value('value') === 'true';
+
+        $rules = [
             'nim' => 'required|string|max:20|unique:alumni,nim,' . $alumni->alumni_id . ',alumni_id',
             'nama' => 'required|string|max:100',
             'prodi_id' => 'required|exists:prodis,id',
             'year_id' => 'required|exists:years,id',
             'email' => 'required|email|max:255',
             'no_hp' => 'nullable|string|max:20',
-            'status' => 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja',
-        ]);
+        ];
+
+        if ($isStatusEnabled) {
+            $rules['status'] = 'required|in:Bekerja,Mencari Kerja,Wirausaha,Studi Lanjut,Belum Bekerja';
+        }
+
+        $validated = $request->validate($rules);
 
         $alumni->update($validated);
 

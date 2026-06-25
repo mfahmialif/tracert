@@ -23,7 +23,9 @@ import {
 import { useRouter } from "vue-router";
 import { ArrowLeft } from "lucide-vue-next";
 import { toast } from "vue-sonner";
+import { useSettingsStore } from '@/stores/settings';
 
+const settingsStore = useSettingsStore();
 const router = useRouter();
 const prodis = ref<any[]>([]);
 const years = ref<any[]>([]);
@@ -40,7 +42,8 @@ const form = reactive({
   status: "",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  await settingsStore.fetchSettings();
   fetchProdis();
   fetchYears();
 });
@@ -182,7 +185,7 @@ async function handleSubmit() {
               <Input id="no_hp" v-model="form.no_hp" placeholder="08..." />
             </div>
 
-            <div class="grid gap-2">
+            <div v-if="settingsStore.isAlumniStatusEnabled" class="grid gap-2">
               <Label for="status">Status</Label>
               <Select v-model="form.status">
                 <SelectTrigger>

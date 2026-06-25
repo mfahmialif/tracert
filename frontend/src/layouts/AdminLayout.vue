@@ -34,6 +34,7 @@ import {
   ChevronDown,
   User,
   UserCog,
+  Settings,
 } from "lucide-vue-next";
 
 const router = useRouter();
@@ -115,6 +116,14 @@ async function handleLogout() {
                 @click="router.push('/admin/users')"
               >
                 <UserCog class="h-5 w-5" /> User & Level
+              </Button>
+              <Button
+                v-if="authStore.isSuperAdmin"
+                variant="ghost"
+                :class="['w-full', navButtonClass('/admin/settings')]"
+                @click="router.push('/admin/settings')"
+              >
+                <Settings class="h-5 w-5" /> Konfigurasi
               </Button>
               <router-link
                 to="/admin/faculties"
@@ -245,6 +254,15 @@ async function handleLogout() {
               @click="router.push('/admin/users')"
             >
               <UserCog class="h-4 w-4" /> User & Level
+            </Button>
+            <Button
+              v-if="authStore.isSuperAdmin"
+              variant="ghost"
+              size="sm"
+              :class="navButtonClass('/admin/settings')"
+              @click="router.push('/admin/settings')"
+            >
+              <Settings class="h-4 w-4" /> Konfigurasi
             </Button>
           </nav>
         </div>

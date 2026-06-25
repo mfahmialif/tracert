@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\QuestionnaireManagementController;
 use App\Http\Controllers\Api\QuestionnaireTypeController;
 use App\Http\Controllers\Api\UserManagementController;
 use App\Http\Controllers\Api\YearController;
+use App\Http\Controllers\Api\SettingController;
 use Illuminate\Support\Facades\Route;
 
 // Public Questionnaires (no auth required)
@@ -38,6 +39,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Public data
     Route::get('/prodis', [ProdiController::class, 'index']);
+    Route::get('/settings', [SettingController::class, 'index']);
 
     // Alumni routes
     Route::middleware(['role:alumni'])->group(function () {
@@ -93,6 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::middleware('role:superadmin')->group(function () {
             Route::get('/users/roles', [UserManagementController::class, 'roles']);
             Route::apiResource('users', UserManagementController::class)->except('show');
+            Route::post('/settings', [SettingController::class, 'update']);
         });
 
         // Question Management

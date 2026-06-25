@@ -62,6 +62,12 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'superadmin' },
     },
     {
+      path: '/admin/settings',
+      name: 'admin-settings',
+      component: () => import('../views/superadmin/SettingsView.vue'),
+      meta: { requiresAuth: true, role: 'superadmin' },
+    },
+    {
       path: '/admin/alumni',
       name: 'admin-alumni',
       component: () => import('../views/admin/AlumniView.vue'),
@@ -115,7 +121,6 @@ const router = createRouter({
       component: () => import('../views/admin/questionnaires/QuestionRespondentsView.vue'),
       meta: { requiresAuth: true, role: 'admin' },
     },
-
     {
       path: '/admin/faculties',
       name: 'admin-faculties',
@@ -152,7 +157,6 @@ const router = createRouter({
       component: () => import('../views/admin/prodi/EditView.vue'),
       meta: { requiresAuth: true, role: 'admin' },
     },
-    // Year
     {
       path: '/admin/years',
       name: 'admin-years',
@@ -179,7 +183,6 @@ let authChecked = false
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
-  // Only fetch user once on initial load
   if (!authChecked) {
     authChecked = true
     const token = localStorage.getItem('auth_token')
@@ -187,7 +190,6 @@ router.beforeEach(async (to, _from, next) => {
       try {
         await authStore.fetchUser()
       } catch (error) {
-        // User is not authenticated - clear invalid token
         localStorage.removeItem('auth_token')
       }
     }
@@ -210,13 +212,11 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
 
-  // Redirect unauthenticated users to login
   if (requiresAuth && !authStore.isAuthenticated) {
     next({ path: '/login', replace: true })
     return
   }
 
-  // Redirect authenticated users away from login page
   if (isGuest && authStore.isAuthenticated) {
     if (authStore.isAdmin) {
       next({ path: '/admin', replace: true })
@@ -226,7 +226,6 @@ router.beforeEach(async (to, _from, next) => {
     return
   }
 
-  // Check role access
   if (requiredRole && authStore.isAuthenticated) {
     if (requiredRole === 'admin' && !authStore.isAdmin) {
       next({ path: '/', replace: true })

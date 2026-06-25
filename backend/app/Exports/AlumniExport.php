@@ -14,10 +14,12 @@ class AlumniExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 {
     protected $query;
     protected $rowNumber = 0;
+    protected $isStatusEnabled = false;
 
     public function __construct(Builder $query)
     {
         $this->query = $query;
+        $this->isStatusEnabled = \App\Models\Setting::where('key', 'enable_alumni_status')->value('value') === 'true';
     }
 
     public function query()
@@ -27,7 +29,7 @@ class AlumniExport implements FromQuery, WithHeadings, WithMapping, WithStyles
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'No',
             'NIM',
             'Nama',
@@ -35,15 +37,20 @@ class AlumniExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             'Tahun Lulus',
             'Email',
             'No HP',
-            'Status',
         ];
+
+        if ($this->isStatusEnabled) {
+            $headings[] = 'Status';
+        }
+
+        return $headings;
     }
 
     public function map($alumni): array
     {
         $this->rowNumber++;
 
-        return [
+        $row = [
             $this->rowNumber,
             $alumni->nim,
             $alumni->nama,
@@ -51,8 +58,13 @@ class AlumniExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             $alumni->year->name ?? '-',
             $alumni->email ?? '-',
             $alumni->no_hp ?? '-',
-            $alumni->status ?? '-',
         ];
+
+        if ($this->isStatusEnabled) {
+            $row[] = $alumni->status ?? '-';
+        }
+
+        return $row;
     }
 
     public function styles(Worksheet $sheet): array

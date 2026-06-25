@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/composables/useTheme";
+import { useSettingsStore } from "@/stores/settings";
 import PublicPageLoader from "@/views/public/PublicPageLoader.vue";
 import {
   ArrowRight,
@@ -26,6 +27,7 @@ import {
 
 const router = useRouter();
 const { isDark, toggleTheme } = useTheme();
+const settingsStore = useSettingsStore();
 
 const isVisible = ref(false);
 const loading = ref(true);
@@ -54,12 +56,13 @@ const stats = [
   { number: "100%", label: "Data Terintegrasi", icon: ShieldCheck },
 ];
 
-const features = [
+const features = computed(() => [
   {
     icon: Users,
     title: "Alumni Tracking",
-    description:
-      "Pantau riwayat karier, status pekerjaan, dan perkembangan alumni dalam satu dashboard yang mudah dibaca.",
+    description: settingsStore.isAlumniStatusEnabled
+      ? "Pantau riwayat karier, status pekerjaan, dan perkembangan alumni dalam satu dashboard yang mudah dibaca."
+      : "Pantau riwayat karier dan perkembangan alumni dalam satu dashboard yang mudah dibaca.",
     image: new URL("@/assets/img/tracking-professional.svg", import.meta.url).href,
   },
   {
@@ -83,7 +86,7 @@ const features = [
       "Siapkan laporan ringkas dan akurat untuk akreditasi, evaluasi mutu, serta pengambilan keputusan institusi.",
     image: new URL("@/assets/img/accreditation-professional.svg", import.meta.url).href,
   },
-];
+]);
 
 const processSteps = [
   {
@@ -123,6 +126,7 @@ onMounted(async () => {
   }, 120);
 
   try {
+    await settingsStore.fetchSettings();
     await Promise.all([
       nextTick(),
       preloadImage(heroImage),

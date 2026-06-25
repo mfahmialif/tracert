@@ -21,6 +21,7 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
     private $prodiMap = [];
     private $yearMap = [];
     private $defaultPassword;
+    private $isStatusEnabled = false;
 
     public function __construct()
     {
@@ -30,6 +31,7 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
 
         // Hash password once instead of per-row
         $this->defaultPassword = Hash::make('alumni123');
+        $this->isStatusEnabled = \App\Models\Setting::where('key', 'enable_alumni_status')->value('value') === 'true';
     }
 
     public function collection(Collection $rows)
@@ -74,7 +76,7 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
 
                 if ($existingAlumni->has($nim)) {
                     // Collect updates for batch processing
-                    $updateBatch[] = [
+                    $updateData = [
                         'nim' => $nim,
                         'nama' => $nama,
                         'prodi_id' => $prodiId,
@@ -82,6 +84,12 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
                         'email' => $row['email'] ?? null,
                         'no_hp' => $row['no_hp'] ?? null,
                     ];
+                    
+                    if ($this->isStatusEnabled && isset($row['status'])) {
+                        $updateData['status'] = $row['status'];
+                    }
+
+                    $updateBatch[] = $updateData;
                     $this->updateCount++;
                 } else {
                     // Collect new records for batch insert
@@ -96,7 +104,7 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
                         $existingUsernames[$nim] = true; // Prevent duplicates within file
                     }
 
-                    $newAlumniData[] = [
+                    $insertData = [
                         'nim' => $nim,
                         'nama' => $nama,
                         'prodi_id' => $prodiId,
@@ -107,19 +115,29 @@ class AlumniImport implements ToCollection, WithHeadingRow, WithChunkReading
                         'created_at' => $now,
                         'updated_at' => $now,
                     ];
+                    
+                    if ($this->isStatusEnabled && isset($row['status'])) {
+                        $insertData['status'] = $row['status'];
+                    }
+
+                    $newAlumniData[] = $insertData;
                     $this->rowCount++;
                 }
             }
 
             // Batch update existing alumni
             foreach ($updateBatch as $data) {
-                Alumni::where('nim', $data['nim'])->update([
+                $updateFields = [
                     'nama' => $data['nama'],
                     'prodi_id' => $data['prodi_id'],
                     'year_id' => $data['year_id'],
                     'email' => $data['email'],
                     'no_hp' => $data['no_hp'],
-                ]);
+                ];
+                if (isset($data['status'])) {
+                    $updateFields['status'] = $data['status'];
+                }
+                Alumni::where('nim', $data['nim'])->update($updateFields);
             }
 
             // Batch insert new users
